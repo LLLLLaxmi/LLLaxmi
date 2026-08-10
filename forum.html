@@ -4,7 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>兰书小说同人网</title>
+    <!-- 引入 Firebase SDK -->
+    <script type="module">
+        // 导入 Firebase 和 Firestore
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, getDocs, where, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCGA8Nzne8z0TSGpwhIFr0zsLQu6Hdc7aE",
+            authDomain: "lanshu-e4b74.firebaseapp.com",
+            projectId: "lanshu-e4b74",
+            storageBucket: "lanshu-e4b74.firebasestorage.app",
+            messagingSenderId: "262254553127",
+            appId: "1:262254553127:web:ea93d881adeb6c7f834602",
+            measurementId: "G-H6B6RPT09G"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // 让这些实例可以被全局访问（供后续内联脚本使用）
+        window.auth = auth;
+        window.db = db;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.signOut = signOut;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.query = query;
+        window.orderBy = orderBy;
+        window.getDocs = getDocs;
+        window.where = where;
+        window.doc = doc;
+        window.updateDoc = updateDoc;
+        window.arrayUnion = arrayUnion;
+    </script>
+
     <style>
+        /* 所有样式与之前保持一致，为了节省篇幅这里省略，但实际必须包含完整样式 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', 'PingFang TC', 'Microsoft YaHei', sans-serif;
@@ -20,7 +60,7 @@
         body.bg-black { background: #1e1e1e; color: #e0e0e0; }
         body.bg-white { background: #ffffff; color: #2c2c2c; }
         body.bg-blue { background: #d6eaf8; color: #1a5276; }
-
+        /* 深色适配省略，与之前相同 */
         body.bg-black .post-item,
         body.bg-black .modal,
         body.bg-black .reply-item,
@@ -47,7 +87,6 @@
         body.bg-black .modal-close {
             color: #aaa !important;
         }
-
         header {
             text-align: center;
             padding: 30px 0 10px;
@@ -104,12 +143,8 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .color-btn:hover {
-            transform: scale(1.15);
-        }
-        .color-btn.active {
-            border-color: #000;
-        }
+        .color-btn:hover { transform: scale(1.15); }
+        .color-btn.active { border-color: #000; }
         .btn {
             background: #d6c9c0;
             border: none;
@@ -124,9 +159,7 @@
             background: #b8a69a;
             color: #fff;
         }
-        .btn-primary:hover {
-            background: #a48f82;
-        }
+        .btn-primary:hover { background: #a48f82; }
         .btn-outline {
             background: transparent;
             border: 1px solid #b8a69a;
@@ -158,9 +191,7 @@
             cursor: pointer;
             color: #3a2f2a;
         }
-        .post-item h3:hover {
-            color: #8a7a6e;
-        }
+        .post-item h3:hover { color: #8a7a6e; }
         .post-meta {
             font-size: 0.85rem;
             color: #9a8e86;
@@ -168,9 +199,7 @@
             gap: 18px;
             flex-wrap: wrap;
         }
-        .post-meta span {
-            display: inline-block;
-        }
+        .post-meta span { display: inline-block; }
         .post-excerpt {
             margin-top: 8px;
             color: #5a4f48;
@@ -190,9 +219,7 @@
             align-items: center;
             z-index: 100;
         }
-        .modal-overlay.active {
-            display: flex;
-        }
+        .modal-overlay.active { display: flex; }
         .modal {
             background: #fffcf9;
             max-width: 600px;
@@ -214,10 +241,7 @@
             background: none;
             border: none;
         }
-        .modal h2 {
-            font-weight: 400;
-            margin-bottom: 6px;
-        }
+        .modal h2 { font-weight: 400; margin-bottom: 6px; }
         .modal .detail-meta {
             color: #9a8e86;
             font-size: 0.85rem;
@@ -241,9 +265,7 @@
             margin-bottom: 10px;
             font-size: 0.95rem;
         }
-        .reply-item strong {
-            color: #5a4f48;
-        }
+        .reply-item strong { color: #5a4f48; }
         .reply-form {
             display: flex;
             flex-direction: column;
@@ -261,12 +283,8 @@
             background: inherit;
             color: inherit;
         }
-        .reply-form button {
-            align-self: flex-end;
-        }
-        .form-group {
-            margin-bottom: 14px;
-        }
+        .reply-form button { align-self: flex-end; }
+        .form-group { margin-bottom: 14px; }
         .form-group label {
             display: block;
             margin-bottom: 4px;
@@ -308,15 +326,9 @@
             .search-area { flex-direction: column; align-items: stretch; }
             .color-picker { justify-content: center; }
         }
-        .post-item.hidden {
-            display: none;
-        }
         #paimon-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top:0; left:0; width:100%; height:100%;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -326,6 +338,30 @@
         #paimon-overlay canvas {
             width: 300px;
             height: 300px;
+        }
+        .auth-btn {
+            background: transparent;
+            border: 1px solid #b8a69a;
+            padding: 4px 14px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .auth-btn:hover {
+            background: #b8a69a;
+            color: #fff;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        .category-select {
+            padding: 4px 12px;
+            border-radius: 30px;
+            border: 1px solid #d6c9c0;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -337,23 +373,50 @@
 
 <div class="forum-nav">
     <div class="search-area">
-        <input type="text" id="searchInput" placeholder="🔍 搜尋標題或內容…" style="min-width:180px;">
+        <input type="text" id="searchInput" placeholder="🔍 搜尋標題或內容…">
+        <select id="categorySelect" class="category-select">
+            <option value="全部">全部</option>
+            <option value="ORV">ORV</option>
+            <option value="其他">其他</option>
+        </select>
         <span class="color-picker">
             <span style="font-size:0.9rem; margin-right:4px;">背景：</span>
-            <span class="color-btn" style="background:#d4edda;" data-color="green" title="綠色"></span>
-            <span class="color-btn" style="background:#d7ccc8;" data-color="brown" title="棕色"></span>
-            <span class="color-btn" style="background:#1e1e1e;" data-color="black" title="黑色"></span>
-            <span class="color-btn" style="background:#ffffff; border-color:#ccc;" data-color="white" title="白色"></span>
-            <span class="color-btn" style="background:#d6eaf8;" data-color="blue" title="藍色"></span>
+            <span class="color-btn" style="background:#d4edda;" data-color="green"></span>
+            <span class="color-btn" style="background:#d7ccc8;" data-color="brown"></span>
+            <span class="color-btn" style="background:#1e1e1e;" data-color="black"></span>
+            <span class="color-btn" style="background:#ffffff; border-color:#ccc;" data-color="white"></span>
+            <span class="color-btn" style="background:#d6eaf8;" data-color="blue"></span>
         </span>
     </div>
-    <div>
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <span id="userDisplay" style="font-size:0.9rem;">未登入</span>
+        <button id="authBtn" class="auth-btn">登入 / 註冊</button>
+        <button id="logoutBtn" class="auth-btn" style="display:none;">登出</button>
         <button class="btn btn-primary" id="newPostBtn">＋ 發新帖</button>
     </div>
 </div>
 
-<div id="postList" class="post-list">
-    <!-- 动态渲染 -->
+<div id="postList" class="post-list"></div>
+
+<!-- 登录/注册弹窗 -->
+<div class="modal-overlay" id="authModal">
+    <div class="modal">
+        <button class="modal-close" id="closeAuth">×</button>
+        <h2 id="authTitle">登入</h2>
+        <div class="form-group">
+            <label>用戶名 (電子郵件)</label>
+            <input type="email" id="authEmail" placeholder="你的信箱">
+        </div>
+        <div class="form-group">
+            <label>密碼</label>
+            <input type="password" id="authPassword" placeholder="至少6位">
+        </div>
+        <button class="btn btn-primary" id="submitAuth" style="width:100%;">登入</button>
+        <p style="margin-top:12px; text-align:center; font-size:0.9rem;">
+            <span id="authToggleText">還沒有帳號？</span>
+            <a href="#" id="authToggleLink">註冊</a>
+        </p>
+    </div>
 </div>
 
 <!-- 新帖弹窗 -->
@@ -364,6 +427,13 @@
         <div class="form-group">
             <label>標題</label>
             <input type="text" id="postTitle" placeholder="寫下你的主題">
+        </div>
+        <div class="form-group">
+            <label>分類</label>
+            <select id="postCategory" style="width:100%; padding:8px 14px; border-radius:12px; border:1px solid #d6c9c0;">
+                <option value="ORV">ORV</option>
+                <option value="其他">其他</option>
+            </select>
         </div>
         <div class="form-group">
             <label>內容</label>
@@ -390,101 +460,215 @@
     </div>
 </div>
 
-<div class="footer">數據保存在本地瀏覽器 · 關閉頁面不會丟失</div>
+<div class="footer">數據儲存在 Firebase 雲端 · 關閉頁面不會遺失</div>
 
-<script>
-    function getPosts() {
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, orderBy, getDocs, where, doc, updateDoc, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCGA8Nzne8z0TSGpwhIFr0zsLQu6Hdc7aE",
+        authDomain: "lanshu-e4b74.firebaseapp.com",
+        projectId: "lanshu-e4b74",
+        storageBucket: "lanshu-e4b74.firebasestorage.app",
+        messagingSenderId: "262254553127",
+        appId: "1:262254553127:web:ea93d881adeb6c7f834602",
+        measurementId: "G-H6B6RPT09G"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // DOM 引用
+    const postList = document.getElementById('postList');
+    const searchInput = document.getElementById('searchInput');
+    const categorySelect = document.getElementById('categorySelect');
+    const userDisplay = document.getElementById('userDisplay');
+    const authBtn = document.getElementById('authBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const authModal = document.getElementById('authModal');
+    const closeAuth = document.getElementById('closeAuth');
+    const authTitle = document.getElementById('authTitle');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const submitAuth = document.getElementById('submitAuth');
+    const authToggleLink = document.getElementById('authToggleLink');
+    const authToggleText = document.getElementById('authToggleText');
+    const newPostBtn = document.getElementById('newPostBtn');
+    const newPostModal = document.getElementById('newPostModal');
+    const closeNewPost = document.getElementById('closeNewPost');
+    const postTitle = document.getElementById('postTitle');
+    const postCategory = document.getElementById('postCategory');
+    const postContent = document.getElementById('postContent');
+    const submitPost = document.getElementById('submitPost');
+    const detailModal = document.getElementById('detailModal');
+    const closeDetail = document.getElementById('closeDetail');
+    const detailTitle = document.getElementById('detailTitle');
+    const detailMeta = document.getElementById('detailMeta');
+    const detailContent = document.getElementById('detailContent');
+    const replyList = document.getElementById('replyList');
+    const replyInput = document.getElementById('replyInput');
+    const submitReply = document.getElementById('submitReply');
+
+    let currentUser = null;
+    let currentDetailId = null;
+    let isLogin = true; // true=登录模式，false=注册模式
+
+    // ----- 渲染帖子 -----
+    async function renderPosts(filter = '', category = '全部') {
         try {
-            return JSON.parse(localStorage.getItem('forumPosts')) || [];
-        } catch { return []; }
-    }
-    function savePosts(posts) {
-        localStorage.setItem('forumPosts', JSON.stringify(posts));
-    }
-
-    function initSampleData() {
-        let posts = getPosts();
-        if (posts.length === 0) {
-            posts = [
-                {
-                    id: 1,
-                    title: '《全知讀者視角》外傳《尋寶》讀後感',
-                    content: '剛讀完劉尚雅視角的這篇外傳，覺得作者真的很會寫「普通人在日常中發現冒險」的氛圍。那個戴太陽眼鏡的作家女孩和小男孩都很有記憶點。大家覺得這個外傳補全了尚雅的哪些背景？',
-                    author: '迷途讀者',
-                    time: '2026-08-10 14:30',
-                    replies: [
-                        { author: '金獨子鐵粉', content: '我覺得尚雅的家庭壓力和她對「逃跑」的渴望是整篇的核心，最後她沒回去野餐那個細節非常動人。' },
-                        { author: '書蟲阿晴', content: '那台復古電腦上跑的遊戲畫面是不是在暗示《滅亡後的世界》？我當時看到就很激動。' }
-                    ]
-                },
-                {
-                    id: 2,
-                    title: '求推薦類似ORV的韓國網文',
-                    content: '看完ORV之後書荒了很久，有沒有類似風格的作品推薦？就是那種「讀者/觀測者與故事本身產生交互」的設定。不一定要戰鬥類，能燒腦的也行。',
-                    author: '小說獵人',
-                    time: '2026-08-09 21:10',
-                    replies: [
-                        { author: '路人甲', content: '試試《SSSSS級無限輪迴者》，同一個作者，設定也很特別。' },
-                        { author: 'NA', content: '《滅亡後的世界》也不錯，但更偏哲學一點。' }
-                    ]
-                }
-            ];
-            savePosts(posts);
-        }
-    }
-    initSampleData();
-
-    function renderPosts(filter = '') {
-        const posts = getPosts();
-        const container = document.getElementById('postList');
-        const keyword = filter.trim().toLowerCase();
-
-        let filteredPosts = posts;
-        if (keyword) {
-            filteredPosts = posts.filter(p => 
-                p.title.toLowerCase().includes(keyword) ||
-                p.content.toLowerCase().includes(keyword)
-            );
-        }
-
-        if (filteredPosts.length === 0) {
-            container.innerHTML = `<div class="empty-state">📭 沒有符合的帖子，試試其他關鍵詞吧</div>`;
-            return;
-        }
-
-        container.innerHTML = filteredPosts.map(p => `
-            <div class="post-item" data-id="${p.id}">
-                <h3 class="post-title">${escapeHtml(p.title)}</h3>
-                <div class="post-meta">
-                    <span>✍️ ${escapeHtml(p.author)}</span>
-                    <span>🕒 ${escapeHtml(p.time)}</span>
-                    <span>💬 ${p.replies ? p.replies.length : 0} 則回覆</span>
-                </div>
-                <div class="post-excerpt">${escapeHtml(p.content)}</div>
-            </div>
-        `).join('');
-
-        document.querySelectorAll('.post-title').forEach(el => {
-            el.addEventListener('click', function() {
-                const id = parseInt(this.closest('.post-item').dataset.id);
-                openDetail(id);
+            let q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+            const snapshot = await getDocs(q);
+            let posts = [];
+            snapshot.forEach(doc => {
+                posts.push({ id: doc.id, ...doc.data() });
             });
-        });
+
+            // 分类筛选
+            if (category !== '全部') {
+                posts = posts.filter(p => p.category === category);
+            }
+            // 文字搜索
+            const keyword = filter.trim().toLowerCase();
+            if (keyword) {
+                posts = posts.filter(p =>
+                    p.title.toLowerCase().includes(keyword) ||
+                    p.content.toLowerCase().includes(keyword)
+                );
+            }
+
+            if (posts.length === 0) {
+                postList.innerHTML = `<div class="empty-state">📭 沒有符合的帖子</div>`;
+                return;
+            }
+
+            postList.innerHTML = posts.map(p => `
+                <div class="post-item" data-id="${p.id}">
+                    <h3 class="post-title">${escapeHtml(p.title)}</h3>
+                    <div class="post-meta">
+                        <span>✍️ ${escapeHtml(p.authorName || '匿名')}</span>
+                        <span>🕒 ${p.createdAt ? new Date(p.createdAt.seconds * 1000).toLocaleString('zh-HK') : ''}</span>
+                        <span>💬 ${p.replies ? p.replies.length : 0} 則回覆</span>
+                        <span>🏷️ ${escapeHtml(p.category || '未分類')}</span>
+                    </div>
+                    <div class="post-excerpt">${escapeHtml(p.content)}</div>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.post-title').forEach(el => {
+                el.addEventListener('click', function() {
+                    const id = this.closest('.post-item').dataset.id;
+                    openDetail(id);
+                });
+            });
+        } catch (error) {
+            console.error('读取帖子失败:', error);
+            postList.innerHTML = `<div class="empty-state">⚠️ 讀取失敗，請檢查網路或稍後再試</div>`;
+        }
     }
 
     function escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    // ------- 彩蛋：使用真实图片 ----------
-    let paimonShowing = false;
+    // ----- 打开详情 -----
+    async function openDetail(id) {
+        try {
+            const docRef = doc(db, 'posts', id);
+            const snapshot = await getDocs(query(collection(db, 'posts')));
+            let post = null;
+            snapshot.forEach(d => {
+                if (d.id === id) post = { id: d.id, ...d.data() };
+            });
+            if (!post) return;
+            currentDetailId = id;
+            detailTitle.textContent = post.title;
+            detailMeta.textContent = `✍️ ${post.authorName || '匿名'}  ·  🕒 ${post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString('zh-HK') : ''}  ·  💬 ${post.replies ? post.replies.length : 0} 則回覆`;
+            detailContent.textContent = post.content;
 
+            if (post.replies && post.replies.length > 0) {
+                replyList.innerHTML = post.replies.map(r => `
+                    <div class="reply-item"><strong>${escapeHtml(r.author)}</strong>：${escapeHtml(r.content)}</div>
+                `).join('');
+            } else {
+                replyList.innerHTML = '<div style="color:#9a8e86; padding:8px 0;">還沒有回覆，來搶個沙發吧 🛋️</div>';
+            }
+            detailModal.classList.add('active');
+        } catch (error) {
+            alert('讀取詳情失敗');
+        }
+    }
+
+    // ----- 提交回复 -----
+    submitReply.addEventListener('click', async function() {
+        if (!currentUser) return alert('請先登入');
+        const text = replyInput.value.trim();
+        if (!text) return alert('請寫點內容');
+        try {
+            const postRef = doc(db, 'posts', currentDetailId);
+            await updateDoc(postRef, {
+                replies: arrayUnion({
+                    author: currentUser.email,
+                    content: text,
+                    createdAt: new Date()
+                })
+            });
+            replyInput.value = '';
+            openDetail(currentDetailId);
+            renderPosts(searchInput.value, categorySelect.value);
+        } catch (error) {
+            alert('回覆失敗');
+        }
+    });
+
+    // ----- 发布新帖 -----
+    submitPost.addEventListener('click', async function() {
+        if (!currentUser) return alert('請先登入');
+        const title = postTitle.value.trim();
+        const content = postContent.value.trim();
+        const category = postCategory.value;
+        if (!title || !content) return alert('標題和內容都不能空');
+        try {
+            await addDoc(collection(db, 'posts'), {
+                title,
+                content,
+                category,
+                author: currentUser.uid,
+                authorName: currentUser.email,
+                createdAt: new Date(),
+                replies: []
+            });
+            newPostModal.classList.remove('active');
+            postTitle.value = '';
+            postContent.value = '';
+            renderPosts(searchInput.value, categorySelect.value);
+        } catch (error) {
+            alert('發佈失敗');
+        }
+    });
+
+    // ----- 搜索与分类监听 -----
+    searchInput.addEventListener('input', function() {
+        renderPosts(this.value, categorySelect.value);
+        // 彩蛋：原神牛逼
+        if (this.value === '原神牛逼') {
+            showPaimon();
+        }
+    });
+    categorySelect.addEventListener('change', function() {
+        renderPosts(searchInput.value, this.value);
+    });
+
+    // ----- 彩蛋派蒙（沿用之前的图片版本）-----
+    let paimonShowing = false;
     function showPaimon() {
         if (paimonShowing) return;
         paimonShowing = true;
-
         const overlay = document.createElement('div');
         overlay.id = 'paimon-overlay';
         const canvas = document.createElement('canvas');
@@ -492,11 +676,9 @@
         canvas.height = 300;
         overlay.appendChild(canvas);
         document.body.appendChild(overlay);
-
         const ctx = canvas.getContext('2d');
         const img = new Image();
-        img.src = 'paimon.png';   // 图片放在仓库根目录，确保文件名一致
-
+        img.src = 'paimon.png';
         img.onload = function() {
             let startTime = Date.now();
             function animate() {
@@ -513,117 +695,105 @@
                 ctx.translate(150, 150 + bounce);
                 ctx.rotate(angle);
                 ctx.translate(-150, -150);
-                // 绘制图片（可调整尺寸和位置）
                 ctx.drawImage(img, 75, 75, 150, 150);
                 ctx.restore();
                 requestAnimationFrame(animate);
             }
             animate();
         };
-
-        // 如果图片加载失败，给个提示并自动关闭
         img.onerror = function() {
             overlay.remove();
             paimonShowing = false;
-            alert('派蒙图片加载失败，请确认 paimon.png 已上传到仓库根目录');
+            alert('派蒙圖片加載失敗，請確保 paimon.png 存在');
         };
     }
 
-    // ---- 搜索监听 ----
-    document.getElementById('searchInput').addEventListener('input', function() {
-        const val = this.value;
-        if (val === '原神牛逼') {
-            showPaimon();
-        }
-        renderPosts(val);
-    });
-
-    // ---- 详情弹窗 ----
-    let currentDetailId = null;
-
-    function openDetail(id) {
-        const posts = getPosts();
-        const post = posts.find(p => p.id === id);
-        if (!post) return;
-        currentDetailId = id;
-        document.getElementById('detailTitle').textContent = post.title;
-        document.getElementById('detailMeta').textContent = `✍️ ${post.author}  ·  🕒 ${post.time}  ·  💬 ${post.replies ? post.replies.length : 0} 則回覆`;
-        document.getElementById('detailContent').textContent = post.content;
-
-        const replyList = document.getElementById('replyList');
-        if (post.replies && post.replies.length > 0) {
-            replyList.innerHTML = post.replies.map(r => `
-                <div class="reply-item"><strong>${escapeHtml(r.author)}</strong>：${escapeHtml(r.content)}</div>
-            `).join('');
+    // ----- 认证相关 -----
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user) {
+            userDisplay.textContent = `👤 ${user.email}`;
+            authBtn.style.display = 'none';
+            logoutBtn.style.display = 'inline-block';
         } else {
-            replyList.innerHTML = '<div style="color:#9a8e86; padding:8px 0;">還沒有回覆，來搶個沙發吧 🛋️</div>';
+            userDisplay.textContent = '未登入';
+            authBtn.style.display = 'inline-block';
+            logoutBtn.style.display = 'none';
         }
-
-        document.getElementById('detailModal').classList.add('active');
-    }
-
-    document.getElementById('submitReply').addEventListener('click', function() {
-        const input = document.getElementById('replyInput');
-        const text = input.value.trim();
-        if (!text) return alert('請寫點內容吧');
-        const posts = getPosts();
-        const post = posts.find(p => p.id === currentDetailId);
-        if (!post) return;
-        if (!post.replies) post.replies = [];
-        post.replies.push({
-            author: '匿名讀者',
-            content: text
-        });
-        post.time = new Date().toLocaleString('zh-HK', { hour12: false });
-        savePosts(posts);
-        input.value = '';
-        openDetail(currentDetailId);
-        const searchVal = document.getElementById('searchInput').value;
-        renderPosts(searchVal);
+        renderPosts(searchInput.value, categorySelect.value);
     });
 
-    document.getElementById('closeDetail').addEventListener('click', function() {
-        document.getElementById('detailModal').classList.remove('active');
-    });
-    document.getElementById('detailModal').addEventListener('click', function(e) {
-        if (e.target === this) this.classList.remove('active');
-    });
-
-    // ---- 新帖 ----
-    document.getElementById('newPostBtn').addEventListener('click', function() {
-        document.getElementById('newPostModal').classList.add('active');
-        document.getElementById('postTitle').value = '';
-        document.getElementById('postContent').value = '';
+    authBtn.addEventListener('click', () => {
+        isLogin = true;
+        authTitle.textContent = '登入';
+        submitAuth.textContent = '登入';
+        authToggleText.textContent = '還沒有帳號？';
+        authToggleLink.textContent = '註冊';
+        authModal.classList.add('active');
+        authEmail.value = '';
+        authPassword.value = '';
     });
 
-    document.getElementById('closeNewPost').addEventListener('click', function() {
-        document.getElementById('newPostModal').classList.remove('active');
-    });
-    document.getElementById('newPostModal').addEventListener('click', function(e) {
-        if (e.target === this) this.classList.remove('active');
+    closeAuth.addEventListener('click', () => authModal.classList.remove('active'));
+    authModal.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) authModal.classList.remove('active');
     });
 
-    document.getElementById('submitPost').addEventListener('click', function() {
-        const title = document.getElementById('postTitle').value.trim();
-        const content = document.getElementById('postContent').value.trim();
-        if (!title || !content) return alert('標題和內容都不能空喔');
-        const posts = getPosts();
-        const newId = posts.length ? Math.max(...posts.map(p => p.id)) + 1 : 1;
-        posts.unshift({
-            id: newId,
-            title: title,
-            content: content,
-            author: '匿名書友',
-            time: new Date().toLocaleString('zh-HK', { hour12: false }),
-            replies: []
-        });
-        savePosts(posts);
-        document.getElementById('newPostModal').classList.remove('active');
-        const searchVal = document.getElementById('searchInput').value;
-        renderPosts(searchVal);
+    authToggleLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        isLogin = !isLogin;
+        if (isLogin) {
+            authTitle.textContent = '登入';
+            submitAuth.textContent = '登入';
+            authToggleText.textContent = '還沒有帳號？';
+            authToggleLink.textContent = '註冊';
+        } else {
+            authTitle.textContent = '註冊';
+            submitAuth.textContent = '註冊';
+            authToggleText.textContent = '已有帳號？';
+            authToggleLink.textContent = '登入';
+        }
     });
 
-    // ---- 背景色 ----
+    submitAuth.addEventListener('click', async function() {
+        const email = authEmail.value.trim();
+        const password = authPassword.value.trim();
+        if (!email || !password) return alert('請填寫完整');
+        try {
+            if (isLogin) {
+                await signInWithEmailAndPassword(auth, email, password);
+            } else {
+                await createUserWithEmailAndPassword(auth, email, password);
+            }
+            authModal.classList.remove('active');
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+        await signOut(auth);
+    });
+
+    // ----- 新帖按钮 -----
+    newPostBtn.addEventListener('click', () => {
+        if (!currentUser) return alert('請先登入');
+        newPostModal.classList.add('active');
+        postTitle.value = '';
+        postContent.value = '';
+    });
+    closeNewPost.addEventListener('click', () => newPostModal.classList.remove('active'));
+    newPostModal.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) newPostModal.classList.remove('active');
+    });
+
+    // ----- 关闭详情 -----
+    closeDetail.addEventListener('click', () => detailModal.classList.remove('active'));
+    detailModal.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) detailModal.classList.remove('active');
+    });
+
+    // ----- 背景色切换（与原版一致）-----
     const colorBtns = document.querySelectorAll('.color-btn');
     colorBtns.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -632,15 +802,12 @@
                 .split(' ')
                 .filter(cls => !cls.startsWith('bg-'))
                 .join(' ');
-            if (color !== 'white') {
-                document.body.classList.add('bg-' + color);
-            }
+            if (color !== 'white') document.body.classList.add('bg-' + color);
             colorBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             localStorage.setItem('forumBgColor', color);
         });
     });
-
     const savedBg = localStorage.getItem('forumBgColor');
     if (savedBg && savedBg !== 'white') {
         document.body.classList.add('bg-' + savedBg);
@@ -649,6 +816,7 @@
         document.querySelector('.color-btn[data-color="white"]')?.classList.add('active');
     }
 
+    // 初始加载
     renderPosts();
 </script>
 </body>
