@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>兰书小说同人网</title>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, getDocs, where, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, getDocs, where, doc, updateDoc, arrayUnion, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCGA8Nzne8z0TSGpwhIFr0zsLQu6Hdc7aE",
@@ -22,9 +23,11 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
         window.auth = auth;
         window.db = db;
+        window.storage = storage;
         window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
         window.signInWithEmailAndPassword = signInWithEmailAndPassword;
         window.onAuthStateChanged = onAuthStateChanged;
@@ -38,17 +41,19 @@
         window.doc = doc;
         window.updateDoc = updateDoc;
         window.arrayUnion = arrayUnion;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.ref = ref;
+        window.uploadBytes = uploadBytes;
+        window.getDownloadURL = getDownloadURL;
+        window.updateProfile = updateProfile;
     </script>
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: 'Segoe UI', 'PingFang TC', 'Microsoft YaHei', sans-serif;
-            background: #f7f3ee;
-            color: #2c2c2c;
-            padding: 20px;
-            max-width: 900px;
-            margin: 0 auto;
+            background: #f7f3ee; color: #2c2c2c; padding:20px; max-width:900px; margin:0 auto;
             transition: background 0.3s, color 0.3s;
         }
         body.bg-green { background: #d4edda; color: #155724; }
@@ -56,357 +61,95 @@
         body.bg-black { background: #1e1e1e; color: #e0e0e0; }
         body.bg-white { background: #ffffff; color: #2c2c2c; }
         body.bg-blue { background: #d6eaf8; color: #1a5276; }
-
-        body.bg-black .post-item,
-        body.bg-black .modal,
-        body.bg-black .reply-item,
-        body.bg-black .btn,
-        body.bg-black .form-group input,
-        body.bg-black .form-group textarea,
+        body.bg-black .post-item, body.bg-black .modal, body.bg-black .reply-item,
+        body.bg-black .btn, body.bg-black .form-group input, body.bg-black .form-group textarea,
         body.bg-black .reply-form textarea {
-            background: #2d2d2d !important;
-            color: #e0e0e0 !important;
-            border-color: #555 !important;
+            background: #2d2d2d !important; color: #e0e0e0 !important; border-color:#555 !important;
         }
-        body.bg-black header,
-        body.bg-black .footer {
-            border-color: #555 !important;
-        }
-        body.bg-black .post-item h3,
-        body.bg-black .post-item .post-excerpt,
-        body.bg-black .modal h2,
-        body.bg-black .modal .content {
-            color: #e0e0e0 !important;
-        }
-        body.bg-black .post-meta,
-        body.bg-black .detail-meta,
-        body.bg-black .modal-close {
-            color: #aaa !important;
-        }
-        header {
-            text-align: center;
-            padding: 30px 0 10px;
-            border-bottom: 2px solid #d6c9c0;
-            margin-bottom: 30px;
-        }
-        header h1 {
-            font-size: 2.2rem;
-            font-weight: 300;
-            letter-spacing: 4px;
-            color: inherit;
-        }
-        header p {
-            color: inherit;
-            opacity: 0.7;
-            font-size: 0.95rem;
-            margin-top: 4px;
-        }
-        .forum-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .search-area {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .search-area input {
-            padding: 6px 14px;
-            border-radius: 30px;
-            border: 1px solid #d6c9c0;
-            font-size: 0.95rem;
-            background: inherit;
-            color: inherit;
-        }
-        .search-area input::placeholder {
-            color: #aaa;
-        }
-        .color-picker {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .color-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .color-btn:hover { transform: scale(1.15); }
-        .color-btn.active { border-color: #000; }
-        .btn {
-            background: #d6c9c0;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 30px;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: 0.2s;
-            color: #2c2c2c;
-        }
-        .btn-primary {
-            background: #b8a69a;
-            color: #fff;
-        }
-        .btn-primary:hover { background: #a48f82; }
-        .btn-outline {
-            background: transparent;
-            border: 1px solid #b8a69a;
-        }
-        .btn-outline:hover {
-            background: #b8a69a;
-            color: #fff;
-        }
-        .post-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .post-item {
-            background: #fffcf9;
-            padding: 18px 22px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border-left: 4px solid #b8a69a;
-            transition: 0.15s;
-        }
-        .post-item:hover {
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-        }
-        .post-item h3 {
-            font-size: 1.2rem;
-            font-weight: 500;
-            margin-bottom: 4px;
-            cursor: pointer;
-            color: #3a2f2a;
-        }
-        .post-item h3:hover { color: #8a7a6e; }
-        .post-meta {
-            font-size: 0.85rem;
-            color: #9a8e86;
-            display: flex;
-            gap: 18px;
-            flex-wrap: wrap;
-        }
-        .post-meta span { display: inline-block; }
-        .post-excerpt {
-            margin-top: 8px;
-            color: #5a4f48;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.4);
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal {
-            background: #fffcf9;
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-            position: relative;
-        }
-        .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 22px;
-            font-size: 1.8rem;
-            cursor: pointer;
-            color: #9a8e86;
-            background: none;
-            border: none;
-        }
-        .modal h2 { font-weight: 400; margin-bottom: 6px; }
-        .modal .detail-meta {
-            color: #9a8e86;
-            font-size: 0.85rem;
-            margin-bottom: 18px;
-        }
-        .modal .content {
-            line-height: 1.8;
-            margin-bottom: 24px;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        .reply-section {
-            border-top: 1px solid #e0d6ce;
-            padding-top: 18px;
-            margin-top: 10px;
-        }
-        .reply-item {
-            background: #f7f0eb;
-            padding: 10px 14px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
-        }
-        .reply-item strong { color: #5a4f48; }
-        .reply-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 14px;
-        }
-        .reply-form textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 12px;
-            border: 1px solid #d6c9c0;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 70px;
-            background: inherit;
-            color: inherit;
-        }
-        .reply-form button { align-self: flex-end; }
-        .form-group { margin-bottom: 14px; }
-        .form-group label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 500;
-            color: inherit;
-        }
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 12px;
-            border: 1px solid #d6c9c0;
-            font-family: inherit;
-            font-size: 1rem;
-            background: inherit;
-            color: inherit;
-        }
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 50px 20px;
-            color: #9a8e86;
-        }
-        .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 0.8rem;
-            color: #b8a69a;
-            border-top: 1px solid #e0d6ce;
-            padding-top: 20px;
-        }
-        @media (max-width: 500px) {
-            header h1 { font-size: 1.6rem; }
-            .forum-nav { flex-direction: column; align-items: stretch; }
-            .btn { width: 100%; text-align: center; }
-            .search-area { flex-direction: column; align-items: stretch; }
-            .color-picker { justify-content: center; }
-        }
-        #paimon-overlay {
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            pointer-events: none;
-            z-index: 9999;
-        }
-        #paimon-overlay canvas {
-            width: 300px;
-            height: 300px;
-        }
-        .auth-btn {
-            background: transparent;
-            border: 1px solid #b8a69a;
-            padding: 4px 14px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        .auth-btn:hover {
-            background: #b8a69a;
-            color: #fff;
-        }
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
-        }
-        .category-select {
-            padding: 4px 12px;
-            border-radius: 30px;
-            border: 1px solid #d6c9c0;
-            font-size: 0.9rem;
-        }
+        body.bg-black header, body.bg-black .footer { border-color:#555 !important; }
+        body.bg-black .post-item h3, body.bg-black .post-item .post-excerpt,
+        body.bg-black .modal h2, body.bg-black .modal .content { color:#e0e0e0 !important; }
+        body.bg-black .post-meta, body.bg-black .detail-meta, body.bg-black .modal-close { color:#aaa !important; }
 
-        /* 悬停下拉菜单 */
-        .dropdown-wrapper {
-            position: relative;
-            display: inline-block;
+        header { text-align:center; padding:30px 0 10px; border-bottom:2px solid #d6c9c0; margin-bottom:30px; }
+        header h1 { font-size:2.2rem; font-weight:300; letter-spacing:4px; color:inherit; }
+        header p { color:inherit; opacity:0.7; font-size:0.95rem; margin-top:4px; }
+        .forum-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; flex-wrap:wrap; gap:10px; }
+        .search-area { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .search-area input { padding:6px 14px; border-radius:30px; border:1px solid #d6c9c0; font-size:0.95rem; background:inherit; color:inherit; }
+        .search-area input::placeholder { color:#aaa; }
+        .color-picker { display:flex; gap:8px; align-items:center; }
+        .color-btn { width:28px; height:28px; border-radius:50%; border:2px solid transparent; cursor:pointer; transition:0.2s; }
+        .color-btn:hover { transform:scale(1.15); }
+        .color-btn.active { border-color:#000; }
+        .btn { background:#d6c9c0; border:none; padding:8px 20px; border-radius:30px; font-size:0.95rem; cursor:pointer; transition:0.2s; color:#2c2c2c; }
+        .btn-primary { background:#b8a69a; color:#fff; }
+        .btn-primary:hover { background:#a48f82; }
+        .btn-outline { background:transparent; border:1px solid #b8a69a; }
+        .btn-outline:hover { background:#b8a69a; color:#fff; }
+        .post-list { display:flex; flex-direction:column; gap:16px; }
+        .post-item { background:#fffcf9; padding:18px 22px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); border-left:4px solid #b8a69a; transition:0.15s; }
+        .post-item:hover { box-shadow:0 4px 14px rgba(0,0,0,0.06); }
+        .post-item h3 { font-size:1.2rem; font-weight:500; margin-bottom:4px; cursor:pointer; color:#3a2f2a; }
+        .post-item h3:hover { color:#8a7a6e; }
+        .post-meta { font-size:0.85rem; color:#9a8e86; display:flex; gap:18px; flex-wrap:wrap; }
+        .post-meta span { display:inline-block; }
+        .post-excerpt { margin-top:8px; color:#5a4f48; font-size:0.95rem; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); justify-content:center; align-items:center; z-index:100; }
+        .modal-overlay.active { display:flex; }
+        .modal { background:#fffcf9; max-width:600px; width:90%; max-height:90vh; overflow-y:auto; padding:30px; border-radius:20px; box-shadow:0 20px 50px rgba(0,0,0,0.2); position:relative; }
+        .modal-close { position:absolute; top:16px; right:22px; font-size:1.8rem; cursor:pointer; color:#9a8e86; background:none; border:none; }
+        .modal h2 { font-weight:400; margin-bottom:6px; }
+        .modal .detail-meta { color:#9a8e86; font-size:0.85rem; margin-bottom:18px; }
+        .modal .content { line-height:1.8; margin-bottom:24px; white-space:pre-wrap; word-break:break-word; }
+        .reply-section { border-top:1px solid #e0d6ce; padding-top:18px; margin-top:10px; }
+        .reply-item { background:#f7f0eb; padding:10px 14px; border-radius:10px; margin-bottom:10px; font-size:0.95rem; }
+        .reply-item strong { color:#5a4f48; }
+        .reply-form { display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+        .reply-form textarea { width:100%; padding:10px 14px; border-radius:12px; border:1px solid #d6c9c0; font-family:inherit; resize:vertical; min-height:70px; background:inherit; color:inherit; }
+        .reply-form button { align-self:flex-end; }
+        .form-group { margin-bottom:14px; }
+        .form-group label { display:block; margin-bottom:4px; font-weight:500; color:inherit; }
+        .form-group input, .form-group textarea { width:100%; padding:10px 14px; border-radius:12px; border:1px solid #d6c9c0; font-family:inherit; font-size:1rem; background:inherit; color:inherit; }
+        .form-group textarea { min-height:100px; resize:vertical; }
+        .empty-state { text-align:center; padding:50px 20px; color:#9a8e86; }
+        .footer { margin-top:40px; text-align:center; font-size:0.8rem; color:#b8a69a; border-top:1px solid #e0d6ce; padding-top:20px; position:relative; }
+        @media (max-width:500px) {
+            header h1 { font-size:1.6rem; }
+            .forum-nav { flex-direction:column; align-items:stretch; }
+            .btn { width:100%; text-align:center; }
+            .search-area { flex-direction:column; align-items:stretch; }
+            .color-picker { justify-content:center; }
         }
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 110%;
-            left: 0;
-            background: #fffcf9;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-            min-width: 160px;
-            overflow: hidden;
-            z-index: 50;
-            border: 1px solid #e0d6ce;
-        }
-        .dropdown-menu a {
-            display: block;
-            padding: 10px 18px;
-            color: #2c2c2c;
-            text-decoration: none;
-            font-size: 0.95rem;
-            transition: background 0.15s;
-            cursor: pointer;
-        }
-        .dropdown-menu a:hover {
-            background: #f0e8e0;
-        }
-        .dropdown-wrapper:hover .dropdown-menu {
-            display: block;
-        }
-        /* 让按钮本身在hover时保持状态 */
-        .dropdown-wrapper .btn-primary {
-            display: inline-block;
-        }
-        body.bg-black .dropdown-menu {
-            background: #2d2d2d;
-            border-color: #555;
-        }
-        body.bg-black .dropdown-menu a {
-            color: #e0e0e0;
-        }
-        body.bg-black .dropdown-menu a:hover {
-            background: #3d3d3d;
-        }
+        #paimon-overlay { position:fixed; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; pointer-events:none; z-index:9999; }
+        #paimon-overlay canvas { width:300px; height:300px; }
+
+        .auth-btn { background:transparent; border:1px solid #b8a69a; padding:4px 14px; border-radius:30px; cursor:pointer; font-size:0.9rem; }
+        .auth-btn:hover { background:#b8a69a; color:#fff; }
+        .user-info { display:flex; align-items:center; gap:10px; font-size:0.9rem; }
+        .category-select { padding:4px 12px; border-radius:30px; border:1px solid #d6c9c0; font-size:0.9rem; }
+
+        .dropdown-wrapper { position:relative; display:inline-block; }
+        .dropdown-menu { display:none; position:absolute; top:110%; left:0; background:#fffcf9; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.12); min-width:160px; overflow:hidden; z-index:50; border:1px solid #e0d6ce; }
+        .dropdown-menu a { display:block; padding:10px 18px; color:#2c2c2c; text-decoration:none; font-size:0.95rem; transition:background 0.15s; cursor:pointer; }
+        .dropdown-menu a:hover { background:#f0e8e0; }
+        .dropdown-wrapper:hover .dropdown-menu { display:block; }
+        body.bg-black .dropdown-menu { background:#2d2d2d; border-color:#555; }
+        body.bg-black .dropdown-menu a { color:#e0e0e0; }
+        body.bg-black .dropdown-menu a:hover { background:#3d3d3d; }
+
+        .user-avatar { display:inline-block; width:32px; height:32px; border-radius:50%; background:#b8a69a; color:#fff; text-align:center; line-height:32px; font-weight:bold; font-size:16px; flex-shrink:0; object-fit:cover; }
+        .user-display { display:flex; align-items:center; gap:8px; }
+        .user-display .user-name { font-weight:500; }
+        .user-email-hint { font-size:0.7rem; color:#aaa; display:none; }
+        .user-display:hover .user-email-hint { display:inline; }
+
+        #footerSticker { position:fixed; bottom:20px; right:20px; z-index:999; cursor:pointer; width:80px; height:80px; border-radius:50%; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; align-items:center; justify-content:center; overflow:hidden; border:2px solid #b8a69a; transition:0.2s; }
+        #footerSticker:hover { transform:scale(1.05); }
+        #footerSticker img { width:100%; height:100%; object-fit:cover; }
+        #stickerPlaceholder { font-size:2rem; }
+        .sticker-admin-btn { position:absolute; bottom:0; right:0; background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:50%; width:24px; height:24px; font-size:12px; cursor:pointer; display:none; align-items:center; justify-content:center; }
+        #footerSticker:hover .sticker-admin-btn { display:flex; }
     </style>
 </head>
 <body>
@@ -417,10 +160,11 @@
 
 <div class="forum-nav">
     <div class="search-area">
-        <input type="text" id="searchInput" placeholder="🔍 搜尋標題或內容…">
+        <input type="text" id="searchInput" placeholder="🔍 搜尋標題或內容…" />
         <select id="categorySelect" class="category-select">
             <option value="全部">全部</option>
             <option value="ORV">ORV</option>
+            <option value="原创">原创</option>
             <option value="其他">其他</option>
         </select>
         <span class="color-picker">
@@ -433,11 +177,15 @@
         </span>
     </div>
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-        <span id="userDisplay" style="font-size:0.9rem;">未登入</span>
+        <span id="userDisplay" style="font-size:0.9rem; display:flex; align-items:center; gap:6px; cursor:default;">
+            <img id="userAvatarImg" class="user-avatar" style="display:none; width:32px; height:32px; border-radius:50%; object-fit:cover;" />
+            <span id="userNameDisplay">未登入</span>
+            <span class="user-email-hint" id="userEmailHint"></span>
+        </span>
         <button id="authBtn" class="auth-btn">登入 / 註冊</button>
         <button id="logoutBtn" class="auth-btn" style="display:none;">登出</button>
+        <button id="uploadAvatarBtn" class="auth-btn" style="display:none;">📷 頭像</button>
 
-        <!-- 带悬停下拉菜单的发帖按钮 -->
         <div class="dropdown-wrapper">
             <button class="btn btn-primary" id="newPostBtn">＋ 發新帖</button>
             <div class="dropdown-menu">
@@ -455,6 +203,10 @@
     <div class="modal">
         <button class="modal-close" id="closeAuth">×</button>
         <h2 id="authTitle">登入</h2>
+        <div class="form-group" id="nicknameGroup" style="display:none;">
+            <label>暱稱</label>
+            <input type="text" id="authNickname" placeholder="你的暱稱（註冊時必填）">
+        </div>
         <div class="form-group">
             <label>用戶名 (電子郵件)</label>
             <input type="email" id="authEmail" placeholder="你的信箱">
@@ -484,6 +236,7 @@
             <label>分類</label>
             <select id="postCategory" style="width:100%; padding:8px 14px; border-radius:12px; border:1px solid #d6c9c0;">
                 <option value="ORV">ORV</option>
+                <option value="原创">原创</option>
                 <option value="其他">其他</option>
             </select>
         </div>
@@ -517,6 +270,7 @@
             <label>分類</label>
             <select id="fanCategory" style="width:100%; padding:8px 14px; border-radius:12px; border:1px solid #d6c9c0;">
                 <option value="ORV">ORV</option>
+                <option value="原创">原创</option>
                 <option value="其他">其他</option>
             </select>
         </div>
@@ -541,39 +295,62 @@
     </div>
 </div>
 
-<div class="footer">數據儲存在 Firebase 雲端 · 關閉頁面不會遺失</div>
+<!-- 管理贴图弹窗（仅站长可见） -->
+<div class="modal-overlay" id="stickerAdminModal">
+    <div class="modal">
+        <button class="modal-close" id="closeStickerAdmin">×</button>
+        <h2>🖼️ 更換右下角貼圖</h2>
+        <p style="color:#7a6f68; margin:10px 0;">輸入圖片網址 或 上傳新圖片（僅站長可操作）</p>
+        <div class="form-group">
+            <label>圖片網址</label>
+            <input type="text" id="stickerUrlInput" placeholder="https://example.com/image.png">
+        </div>
+        <div class="form-group">
+            <label>或上傳圖片</label>
+            <input type="file" id="stickerFileInput" accept="image/*">
+        </div>
+        <button class="btn btn-primary" id="saveStickerBtn">儲存貼圖</button>
+    </div>
+</div>
+
+<div class="footer">
+    數據儲存在 Firebase 雲端 · 關閉頁面不會遺失
+    <div id="footerSticker" title="點擊更換貼圖（僅站長）">
+        <img id="stickerImage" src="" alt="裝飾貼圖" style="width:100%; height:100%; object-fit:cover; display:none;">
+        <span id="stickerPlaceholder" style="font-size:2rem;">✨</span>
+        <button class="sticker-admin-btn" id="stickerAdminBtn">⚙️</button>
+    </div>
+</div>
+
+<input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, getDocs, where, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, orderBy, getDocs, where, doc, updateDoc, arrayUnion, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyCGA8Nzne8z0TSGpwhIFr0zsLQu6Hdc7aE",
-        authDomain: "lanshu-e4b74.firebaseapp.com",
-        projectId: "lanshu-e4b74",
-        storageBucket: "lanshu-e4b74.firebasestorage.app",
-        messagingSenderId: "262254553127",
-        appId: "1:262254553127:web:ea93d881adeb6c7f834602",
-        measurementId: "G-H6B6RPT09G"
-    };
+    const auth = window.auth;
+    const db = window.db;
+    const storage = window.storage;
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // DOM
     const postList = document.getElementById('postList');
     const searchInput = document.getElementById('searchInput');
     const categorySelect = document.getElementById('categorySelect');
     const userDisplay = document.getElementById('userDisplay');
+    const userAvatarImg = document.getElementById('userAvatarImg');
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    const userEmailHint = document.getElementById('userEmailHint');
     const authBtn = document.getElementById('authBtn');
     const logoutBtn = document.getElementById('logoutBtn');
+    const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
     const authModal = document.getElementById('authModal');
     const closeAuth = document.getElementById('closeAuth');
     const authTitle = document.getElementById('authTitle');
     const authEmail = document.getElementById('authEmail');
     const authPassword = document.getElementById('authPassword');
+    const authNickname = document.getElementById('authNickname');
+    const nicknameGroup = document.getElementById('nicknameGroup');
     const submitAuth = document.getElementById('submitAuth');
     const authToggleLink = document.getElementById('authToggleLink');
     const authToggleText = document.getElementById('authToggleText');
@@ -602,33 +379,77 @@
     const replyInput = document.getElementById('replyInput');
     const submitReply = document.getElementById('submitReply');
 
+    const avatarFileInput = document.getElementById('avatarFileInput');
+    const stickerImage = document.getElementById('stickerImage');
+    const stickerPlaceholder = document.getElementById('stickerPlaceholder');
+    const stickerAdminBtn = document.getElementById('stickerAdminBtn');
+    const stickerAdminModal = document.getElementById('stickerAdminModal');
+    const closeStickerAdmin = document.getElementById('closeStickerAdmin');
+    const stickerUrlInput = document.getElementById('stickerUrlInput');
+    const stickerFileInput = document.getElementById('stickerFileInput');
+    const saveStickerBtn = document.getElementById('saveStickerBtn');
+
     let currentUser = null;
+    let currentUserInfo = null;
     let currentDetailId = null;
     let isLogin = true;
 
-    // ----- 渲染 -----
+    // ⚠️ 替换成你自己的 Firebase UID（在 Firebase 控制台 Authentication → Users 里复制）
+    const OWNER_UID = 'YOUR_UID_HERE';
+
+    function getAvatarChar(nickname) {
+        if (!nickname) return '?';
+        return nickname.trim().charAt(0).toUpperCase();
+    }
+    function getAvatarColor(nickname) {
+        const colors = ['#e57373','#f06292','#ba68c8','#9575cd','#64b5f6','#4dd0e1','#81c784','#aed581','#ffb74d','#ff8a65'];
+        if (!nickname) return colors[0];
+        let hash = 0;
+        for (let i=0; i<nickname.length; i++) hash = nickname.charCodeAt(i) + ((hash<<5)-hash);
+        return colors[Math.abs(hash) % colors.length];
+    }
+
+    function updateUserUI(user, userInfo) {
+        if (user && userInfo) {
+            const nickname = userInfo.nickname || user.email || '用戶';
+            const avatarUrl = userInfo.avatarUrl || null;
+            userNameDisplay.textContent = nickname;
+            userEmailHint.textContent = user.email;
+            userEmailHint.style.display = 'inline';
+            if (avatarUrl) {
+                userAvatarImg.src = avatarUrl;
+                userAvatarImg.style.display = 'inline-block';
+            } else {
+                const char = getAvatarChar(nickname);
+                const color = getAvatarColor(nickname);
+                userAvatarImg.style.display = 'inline-block';
+                userAvatarImg.src = '';
+                userAvatarImg.style.background = color;
+                userAvatarImg.alt = char;
+            }
+            authBtn.style.display = 'none';
+            logoutBtn.style.display = 'inline-block';
+            uploadAvatarBtn.style.display = 'inline-block';
+        } else {
+            userNameDisplay.textContent = '未登入';
+            userEmailHint.style.display = 'none';
+            userAvatarImg.style.display = 'none';
+            authBtn.style.display = 'inline-block';
+            logoutBtn.style.display = 'none';
+            uploadAvatarBtn.style.display = 'none';
+        }
+    }
+
     async function renderPosts(filter = '', category = '全部') {
         try {
             let q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
             const snapshot = await getDocs(q);
             let posts = [];
-            snapshot.forEach(doc => {
-                posts.push({ id: doc.id, ...doc.data() });
-            });
-            if (category !== '全部') {
-                posts = posts.filter(p => p.category === category);
-            }
+            snapshot.forEach(doc => posts.push({ id: doc.id, ...doc.data() }));
+            if (category !== '全部') posts = posts.filter(p => p.category === category);
             const keyword = filter.trim().toLowerCase();
-            if (keyword) {
-                posts = posts.filter(p =>
-                    p.title.toLowerCase().includes(keyword) ||
-                    p.content.toLowerCase().includes(keyword)
-                );
-            }
-            if (posts.length === 0) {
-                postList.innerHTML = `<div class="empty-state">📭 沒有符合的帖子</div>`;
-                return;
-            }
+            if (keyword) posts = posts.filter(p => p.title.toLowerCase().includes(keyword) || p.content.toLowerCase().includes(keyword));
+            if (posts.length === 0) { postList.innerHTML = `<div class="empty-state">📭 沒有符合的帖子</div>`; return; }
             postList.innerHTML = posts.map(p => `
                 <div class="post-item" data-id="${p.id}">
                     <h3 class="post-title">${escapeHtml(p.title)}</h3>
@@ -647,63 +468,38 @@
                     openDetail(id);
                 });
             });
-        } catch (error) {
-            postList.innerHTML = `<div class="empty-state">⚠️ 讀取失敗</div>`;
-        }
+        } catch (e) { postList.innerHTML = `<div class="empty-state">⚠️ 讀取失敗</div>`; }
     }
+    function escapeHtml(text) { if (!text) return ''; const d=document.createElement('div'); d.textContent=text; return d.innerHTML; }
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // ----- 详情 -----
     async function openDetail(id) {
         try {
             const snapshot = await getDocs(query(collection(db, 'posts')));
             let post = null;
-            snapshot.forEach(d => {
-                if (d.id === id) post = { id: d.id, ...d.data() };
-            });
+            snapshot.forEach(d => { if (d.id === id) post = { id: d.id, ...d.data() }; });
             if (!post) return;
             currentDetailId = id;
             detailTitle.textContent = post.title;
             detailMeta.textContent = `✍️ ${post.authorName || '匿名'}  ·  🕒 ${post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString('zh-HK') : ''}  ·  💬 ${post.replies ? post.replies.length : 0} 則回覆`;
             detailContent.textContent = post.content;
-            if (post.replies && post.replies.length > 0) {
-                replyList.innerHTML = post.replies.map(r => `
-                    <div class="reply-item"><strong>${escapeHtml(r.author)}</strong>：${escapeHtml(r.content)}</div>
-                `).join('');
-            } else {
-                replyList.innerHTML = '<div style="color:#9a8e86; padding:8px 0;">還沒有回覆</div>';
-            }
+            replyList.innerHTML = post.replies && post.replies.length > 0 ? post.replies.map(r => `<div class="reply-item"><strong>${escapeHtml(r.author)}</strong>：${escapeHtml(r.content)}</div>`).join('') : '<div style="color:#9a8e86; padding:8px 0;">還沒有回覆</div>';
             detailModal.classList.add('active');
-        } catch (error) {
-            alert('讀取詳情失敗');
-        }
+        } catch(e) { alert('讀取詳情失敗'); }
     }
 
-    // ----- 回复 -----
     submitReply.addEventListener('click', async function() {
         if (!currentUser) return alert('請先登入');
         const text = replyInput.value.trim();
         if (!text) return alert('請寫點內容');
         try {
             const postRef = doc(db, 'posts', currentDetailId);
-            await updateDoc(postRef, {
-                replies: arrayUnion({ author: currentUser.email, content: text, createdAt: new Date() })
-            });
+            await updateDoc(postRef, { replies: arrayUnion({ author: currentUserInfo?.nickname || currentUser.email, content: text, createdAt: new Date() }) });
             replyInput.value = '';
             openDetail(currentDetailId);
             renderPosts(searchInput.value, categorySelect.value);
-        } catch (error) {
-            alert('回覆失敗');
-        }
+        } catch(e) { alert('回覆失敗'); }
     });
 
-    // ----- 论坛发帖 -----
     submitPost.addEventListener('click', async function() {
         if (!currentUser) return alert('請先登入');
         const title = postTitle.value.trim();
@@ -714,19 +510,16 @@
             await addDoc(collection(db, 'posts'), {
                 title, content, category,
                 author: currentUser.uid,
-                authorName: currentUser.email,
+                authorName: currentUserInfo?.nickname || currentUser.email,
                 createdAt: new Date(),
                 replies: []
             });
             newPostModal.classList.remove('active');
             postTitle.value = ''; postContent.value = '';
             renderPosts(searchInput.value, categorySelect.value);
-        } catch (error) {
-            alert('發佈失敗');
-        }
+        } catch(e) { alert('發佈失敗'); }
     });
 
-    // ----- 自主汉化提交 -----
     submitFanTranslation.addEventListener('click', async function() {
         if (!currentUser) return alert('請先登入');
         const title = fanTitle.value.trim();
@@ -741,19 +534,16 @@
                 content: fullContent,
                 category: category,
                 author: currentUser.uid,
-                authorName: currentUser.email,
+                authorName: currentUserInfo?.nickname || currentUser.email,
                 createdAt: new Date(),
                 replies: []
             });
             fanTranslationModal.classList.remove('active');
             fanTitle.value = ''; fanChapter.value = ''; fanContent.value = '';
             renderPosts(searchInput.value, categorySelect.value);
-        } catch (error) {
-            alert('提交失敗');
-        }
+        } catch(e) { alert('提交失敗'); }
     });
 
-    // ----- 搜索 & 分类 -----
     searchInput.addEventListener('input', function() {
         renderPosts(this.value, categorySelect.value);
         if (this.value === '原神牛逼') showPaimon();
@@ -762,7 +552,6 @@
         renderPosts(searchInput.value, this.value);
     });
 
-    // ----- 派蒙彩蛋 -----
     let paimonShowing = false;
     function showPaimon() {
         if (paimonShowing) return;
@@ -801,19 +590,28 @@
         };
     }
 
-    // ----- 认证 -----
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         if (user) {
-            userDisplay.textContent = `👤 ${user.email}`;
-            authBtn.style.display = 'none';
-            logoutBtn.style.display = 'inline-block';
+            try {
+                const docRef = doc(db, 'users', user.uid);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    currentUserInfo = docSnap.data();
+                } else {
+                    currentUserInfo = { nickname: user.email.split('@')[0] };
+                }
+                updateUserUI(user, currentUserInfo);
+            } catch(e) {
+                currentUserInfo = { nickname: user.email.split('@')[0] };
+                updateUserUI(user, currentUserInfo);
+            }
+            renderPosts(searchInput.value, categorySelect.value);
         } else {
-            userDisplay.textContent = '未登入';
-            authBtn.style.display = 'inline-block';
-            logoutBtn.style.display = 'none';
+            currentUserInfo = null;
+            updateUserUI(null, null);
+            renderPosts(searchInput.value, categorySelect.value);
         }
-        renderPosts(searchInput.value, categorySelect.value);
     });
 
     authBtn.addEventListener('click', () => {
@@ -822,6 +620,8 @@
         submitAuth.textContent = '登入';
         authToggleText.textContent = '還沒有帳號？';
         authToggleLink.textContent = '註冊';
+        nicknameGroup.style.display = 'none';
+        authNickname.value = '';
         authModal.classList.add('active');
         authEmail.value = ''; authPassword.value = '';
     });
@@ -839,23 +639,37 @@
             submitAuth.textContent = '登入';
             authToggleText.textContent = '還沒有帳號？';
             authToggleLink.textContent = '註冊';
+            nicknameGroup.style.display = 'none';
         } else {
             authTitle.textContent = '註冊';
             submitAuth.textContent = '註冊';
             authToggleText.textContent = '已有帳號？';
             authToggleLink.textContent = '登入';
+            nicknameGroup.style.display = 'block';
         }
     });
 
     submitAuth.addEventListener('click', async function() {
         const email = authEmail.value.trim();
         const password = authPassword.value.trim();
+        const nickname = authNickname.value.trim();
         if (!email || !password) return alert('請填寫完整');
+        if (!isLogin && !nickname) return alert('註冊時請填寫暱稱');
         try {
-            if (isLogin) await signInWithEmailAndPassword(auth, email, password);
-            else await createUserWithEmailAndPassword(auth, email, password);
+            let userCredential;
+            if (isLogin) {
+                userCredential = await signInWithEmailAndPassword(auth, email, password);
+            } else {
+                userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await setDoc(doc(db, 'users', userCredential.user.uid), {
+                    nickname: nickname,
+                    email: email,
+                    createdAt: new Date()
+                });
+                await updateProfile(userCredential.user, { displayName: nickname });
+            }
             authModal.classList.remove('active');
-        } catch (error) {
+        } catch(error) {
             alert(error.message);
         }
     });
@@ -864,15 +678,97 @@
         await signOut(auth);
     });
 
-    // ----- 弹窗控制 -----
-    // 新帖弹窗：通过下拉菜单触发
+    uploadAvatarBtn.addEventListener('click', () => {
+        avatarFileInput.click();
+    });
+
+    avatarFileInput.addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!currentUser) return alert('請先登入');
+        try {
+            const storageRef = ref(storage, `avatars/${currentUser.uid}`);
+            await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(storageRef);
+            await setDoc(doc(db, 'users', currentUser.uid), { avatarUrl: url }, { merge: true });
+            currentUserInfo.avatarUrl = url;
+            updateUserUI(currentUser, currentUserInfo);
+            alert('頭像更新成功！');
+        } catch(error) {
+            alert('上傳失敗：'+error.message);
+        }
+        avatarFileInput.value = '';
+    });
+
+    async function loadSticker() {
+        try {
+            const docRef = doc(db, 'siteConfig', 'sticker');
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.url) {
+                    stickerImage.src = data.url;
+                    stickerImage.style.display = 'block';
+                    stickerPlaceholder.style.display = 'none';
+                } else {
+                    stickerImage.style.display = 'none';
+                    stickerPlaceholder.style.display = 'block';
+                }
+            }
+        } catch(e) { console.error('加载贴图失败', e); }
+    }
+    loadSticker();
+
+    stickerAdminBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!currentUser) return alert('請先登入');
+        if (currentUser.uid !== OWNER_UID) {
+            alert('只有站長可以更換貼圖');
+            return;
+        }
+        stickerAdminModal.classList.add('active');
+        stickerUrlInput.value = '';
+        stickerFileInput.value = '';
+    });
+
+    closeStickerAdmin.addEventListener('click', () => stickerAdminModal.classList.remove('active'));
+    stickerAdminModal.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) stickerAdminModal.classList.remove('active');
+    });
+
+    saveStickerBtn.addEventListener('click', async function() {
+        if (!currentUser || currentUser.uid !== OWNER_UID) return alert('你不是站長');
+        let url = stickerUrlInput.value.trim();
+        if (stickerFileInput.files.length > 0) {
+            const file = stickerFileInput.files[0];
+            try {
+                const storageRef = ref(storage, `stickers/${Date.now()}_${file.name}`);
+                await uploadBytes(storageRef, file);
+                url = await getDownloadURL(storageRef);
+            } catch(e) {
+                alert('上傳失敗');
+                return;
+            }
+        }
+        if (!url) return alert('請輸入網址或選擇圖片');
+        try {
+            await setDoc(doc(db, 'siteConfig', 'sticker'), { url: url, updatedAt: new Date() });
+            stickerImage.src = url;
+            stickerImage.style.display = 'block';
+            stickerPlaceholder.style.display = 'none';
+            stickerAdminModal.classList.remove('active');
+            alert('貼圖已更新！');
+        } catch(e) {
+            alert('儲存失敗');
+        }
+    });
+
     document.getElementById('menuForumPost').addEventListener('click', function(e) {
         e.preventDefault();
         if (!currentUser) return alert('請先登入');
         newPostModal.classList.add('active');
         postTitle.value = ''; postContent.value = '';
     });
-
     document.getElementById('menuFanTranslation').addEventListener('click', function(e) {
         e.preventDefault();
         if (!currentUser) return alert('請先登入');
@@ -881,29 +777,17 @@
     });
 
     closeNewPost.addEventListener('click', () => newPostModal.classList.remove('active'));
-    newPostModal.addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) newPostModal.classList.remove('active');
-    });
-
+    newPostModal.addEventListener('click', (e) => { if (e.target === e.currentTarget) newPostModal.classList.remove('active'); });
     closeFanTranslation.addEventListener('click', () => fanTranslationModal.classList.remove('active'));
-    fanTranslationModal.addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) fanTranslationModal.classList.remove('active');
-    });
-
+    fanTranslationModal.addEventListener('click', (e) => { if (e.target === e.currentTarget) fanTranslationModal.classList.remove('active'); });
     closeDetail.addEventListener('click', () => detailModal.classList.remove('active'));
-    detailModal.addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) detailModal.classList.remove('active');
-    });
+    detailModal.addEventListener('click', (e) => { if (e.target === e.currentTarget) detailModal.classList.remove('active'); });
 
-    // ----- 背景色 -----
     const colorBtns = document.querySelectorAll('.color-btn');
     colorBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const color = this.dataset.color;
-            document.body.className = document.body.className
-                .split(' ')
-                .filter(cls => !cls.startsWith('bg-'))
-                .join(' ');
+            document.body.className = document.body.className.split(' ').filter(cls => !cls.startsWith('bg-')).join(' ');
             if (color !== 'white') document.body.classList.add('bg-' + color);
             colorBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
