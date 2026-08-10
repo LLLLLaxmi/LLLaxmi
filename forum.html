@@ -15,14 +15,12 @@
             margin: 0 auto;
             transition: background 0.3s, color 0.3s;
         }
-        /* 预设背景色类 */
         body.bg-green { background: #d4edda; color: #155724; }
         body.bg-brown { background: #d7ccc8; color: #3e2723; }
         body.bg-black { background: #1e1e1e; color: #e0e0e0; }
         body.bg-white { background: #ffffff; color: #2c2c2c; }
         body.bg-blue { background: #d6eaf8; color: #1a5276; }
 
-        /* 深色背景时调整某些元素颜色 */
         body.bg-black .post-item,
         body.bg-black .modal,
         body.bg-black .reply-item,
@@ -310,9 +308,25 @@
             .search-area { flex-direction: column; align-items: stretch; }
             .color-picker { justify-content: center; }
         }
-        /* 隐藏不匹配的帖子 */
         .post-item.hidden {
             display: none;
+        }
+        #paimon-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        #paimon-overlay canvas {
+            image-rendering: pixelated;
+            width: 200px;
+            height: 200px;
         }
     </style>
 </head>
@@ -380,7 +394,6 @@
 <div class="footer">數據保存在本地瀏覽器 · 關閉頁面不會丟失</div>
 
 <script>
-    // ---------- 數據管理 ----------
     function getPosts() {
         try {
             return JSON.parse(localStorage.getItem('forumPosts')) || [];
@@ -390,7 +403,6 @@
         localStorage.setItem('forumPosts', JSON.stringify(posts));
     }
 
-    // 初始化示例数据（如果为空）
     function initSampleData() {
         let posts = getPosts();
         if (posts.length === 0) {
@@ -423,7 +435,6 @@
     }
     initSampleData();
 
-    // ---------- 渲染与搜索 ----------
     function renderPosts(filter = '') {
         const posts = getPosts();
         const container = document.getElementById('postList');
@@ -454,7 +465,6 @@
             </div>
         `).join('');
 
-        // 点击帖子标题进入详情
         document.querySelectorAll('.post-title').forEach(el => {
             el.addEventListener('click', function() {
                 const id = parseInt(this.closest('.post-item').dataset.id);
@@ -463,18 +473,99 @@
         });
     }
 
-    // 搜索输入实时过滤
-    document.getElementById('searchInput').addEventListener('input', function() {
-        renderPosts(this.value);
-    });
-
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    // ---------- 详情弹窗 ----------
+    // 彩蛋
+    let paimonShowing = false;
+
+    function showPaimon() {
+        if (paimonShowing) return;
+        paimonShowing = true;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'paimon-overlay';
+        const canvas = document.createElement('canvas');
+        canvas.width = 200;
+        canvas.height = 200;
+        overlay.appendChild(canvas);
+        document.body.appendChild(overlay);
+
+        const ctx = canvas.getContext('2d');
+        const size = 20;
+        const grid = [
+            [0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,1,1,1,1,0,0,0],
+            [0,0,1,1,1,1,1,1,0,0],
+            [0,1,1,2,1,1,2,1,1,0],
+            [0,1,1,1,3,3,1,1,1,0],
+            [0,1,1,1,3,3,1,1,1,0],
+            [0,0,1,1,1,1,1,1,0,0],
+            [0,0,1,3,3,3,3,1,0,0],
+            [0,0,1,3,3,3,3,1,0,0],
+            [0,0,0,0,0,0,0,0,0,0]
+        ];
+        const colors = {
+            0: 'transparent',
+            1: '#ffffff',
+            2: '#4a90e2',
+            3: '#e74c3c',
+            4: '#f1c40f',
+            5: '#2c3e50'
+        };
+
+        function drawPixel() {
+            ctx.clearRect(0, 0, 200, 200);
+            for (let row = 0; row < grid.length; row++) {
+                for (let col = 0; col < grid[row].length; col++) {
+                    const val = grid[row][col];
+                    if (val === 0) continue;
+                    ctx.fillStyle = colors[val] || '#000';
+                    ctx.fillRect(col * size, row * size, size, size);
+                }
+            }
+        }
+
+        let startTime = Date.now();
+        let angle = 0;
+        let bounce = 0;
+
+        function animate() {
+            const elapsed = (Date.now() - startTime) / 1000;
+            if (elapsed >= 3) {
+                overlay.remove();
+                paimonShowing = false;
+                return;
+            }
+            angle = (elapsed / 3) * Math.PI * 2;
+            bounce = Math.sin(elapsed * 6) * 15;
+            ctx.save();
+            ctx.clearRect(0, 0, 200, 200);
+            ctx.translate(100, 100);
+            ctx.rotate(angle);
+            ctx.translate(-100, -100 + bounce);
+            drawPixel();
+            ctx.restore();
+            requestAnimationFrame(animate);
+        }
+
+        drawPixel();
+        animate();
+    }
+
+    // 搜索监听
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const val = this.value;
+        if (val === '原神牛逼') {
+            showPaimon();
+        }
+        renderPosts(val);
+    });
+
+    // 详情弹窗
     let currentDetailId = null;
 
     function openDetail(id) {
@@ -498,7 +589,6 @@
         document.getElementById('detailModal').classList.add('active');
     }
 
-    // 提交回覆
     document.getElementById('submitReply').addEventListener('click', function() {
         const input = document.getElementById('replyInput');
         const text = input.value.trim();
@@ -519,7 +609,6 @@
         renderPosts(searchVal);
     });
 
-    // 关闭详情
     document.getElementById('closeDetail').addEventListener('click', function() {
         document.getElementById('detailModal').classList.remove('active');
     });
@@ -527,7 +616,7 @@
         if (e.target === this) this.classList.remove('active');
     });
 
-    // ---------- 新帖弹窗 ----------
+    // 新帖
     document.getElementById('newPostBtn').addEventListener('click', function() {
         document.getElementById('newPostModal').classList.add('active');
         document.getElementById('postTitle').value = '';
@@ -561,38 +650,32 @@
         renderPosts(searchVal);
     });
 
-    // ---------- 背景色切换 ----------
+    // 背景色
     const colorBtns = document.querySelectorAll('.color-btn');
     colorBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const color = this.dataset.color;
-            // 移除所有背景类
             document.body.className = document.body.className
                 .split(' ')
                 .filter(cls => !cls.startsWith('bg-'))
                 .join(' ');
-            if (color !== 'white') { // white是默认背景，不需要加类
+            if (color !== 'white') {
                 document.body.classList.add('bg-' + color);
             }
-            // 激活样式
             colorBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            // 保存偏好
             localStorage.setItem('forumBgColor', color);
         });
     });
 
-    // 恢复上次选择的背景色
     const savedBg = localStorage.getItem('forumBgColor');
     if (savedBg && savedBg !== 'white') {
         document.body.classList.add('bg-' + savedBg);
         document.querySelector(`.color-btn[data-color="${savedBg}"]`)?.classList.add('active');
     } else {
-        // 默认白色高亮
         document.querySelector('.color-btn[data-color="white"]')?.classList.add('active');
     }
 
-    // ---------- 启动 ----------
     renderPosts();
 </script>
 </body>
