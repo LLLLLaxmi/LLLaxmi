@@ -15,6 +15,41 @@
             margin: 0 auto;
             transition: background 0.3s, color 0.3s;
         }
+        /* 预设背景色类 */
+        body.bg-green { background: #d4edda; color: #155724; }
+        body.bg-brown { background: #d7ccc8; color: #3e2723; }
+        body.bg-black { background: #1e1e1e; color: #e0e0e0; }
+        body.bg-white { background: #ffffff; color: #2c2c2c; }
+        body.bg-blue { background: #d6eaf8; color: #1a5276; }
+
+        /* 深色背景时调整某些元素颜色 */
+        body.bg-black .post-item,
+        body.bg-black .modal,
+        body.bg-black .reply-item,
+        body.bg-black .btn,
+        body.bg-black .form-group input,
+        body.bg-black .form-group textarea,
+        body.bg-black .reply-form textarea {
+            background: #2d2d2d !important;
+            color: #e0e0e0 !important;
+            border-color: #555 !important;
+        }
+        body.bg-black header,
+        body.bg-black .footer {
+            border-color: #555 !important;
+        }
+        body.bg-black .post-item h3,
+        body.bg-black .post-item .post-excerpt,
+        body.bg-black .modal h2,
+        body.bg-black .modal .content {
+            color: #e0e0e0 !important;
+        }
+        body.bg-black .post-meta,
+        body.bg-black .detail-meta,
+        body.bg-black .modal-close {
+            color: #aaa !important;
+        }
+
         header {
             text-align: center;
             padding: 30px 0 10px;
@@ -25,55 +60,38 @@
             font-size: 2.2rem;
             font-weight: 300;
             letter-spacing: 4px;
-            color: #4a3f3a;
+            color: inherit;
         }
         header p {
-            color: #7a6f68;
+            color: inherit;
+            opacity: 0.7;
             font-size: 0.95rem;
             margin-top: 4px;
         }
-        .toolbar {
+        .forum-nav {
             display: flex;
-            flex-wrap: wrap;
-            align-items: center;
             justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 25px;
-            background: rgba(255,255,255,0.5);
-            padding: 10px 16px;
-            border-radius: 40px;
-            backdrop-filter: blur(4px);
-        }
-        .toolbar-left {
-            display: flex;
             align-items: center;
-            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .search-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
             flex-wrap: wrap;
         }
-        .toolbar-left span {
-            color: #7a6f68;
-            font-size: 0.95rem;
-        }
-        .search-box {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #fff;
+        .search-area input {
+            padding: 6px 14px;
             border-radius: 30px;
-            padding: 4px 12px;
             border: 1px solid #d6c9c0;
-        }
-        .search-box input {
-            border: none;
-            outline: none;
-            background: transparent;
-            padding: 6px 0;
             font-size: 0.95rem;
-            width: 140px;
-            font-family: inherit;
+            background: inherit;
+            color: inherit;
         }
-        .search-box input::placeholder {
-            color: #b8a69a;
+        .search-area input::placeholder {
+            color: #aaa;
         }
         .color-picker {
             display: flex;
@@ -87,15 +105,12 @@
             border: 2px solid transparent;
             cursor: pointer;
             transition: 0.2s;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
         .color-btn:hover {
-            transform: scale(1.1);
-            border-color: #8a7a6e;
+            transform: scale(1.15);
         }
         .color-btn.active {
-            border-color: #4a3f3a;
-            box-shadow: 0 0 0 2px #fff, 0 0 0 4px #4a3f3a;
+            border-color: #000;
         }
         .btn {
             background: #d6c9c0;
@@ -113,6 +128,14 @@
         }
         .btn-primary:hover {
             background: #a48f82;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #b8a69a;
+        }
+        .btn-outline:hover {
+            background: #b8a69a;
+            color: #fff;
         }
         .post-list {
             display: flex;
@@ -237,6 +260,8 @@
             font-family: inherit;
             resize: vertical;
             min-height: 70px;
+            background: inherit;
+            color: inherit;
         }
         .reply-form button {
             align-self: flex-end;
@@ -248,7 +273,7 @@
             display: block;
             margin-bottom: 4px;
             font-weight: 500;
-            color: #4a3f3a;
+            color: inherit;
         }
         .form-group input,
         .form-group textarea {
@@ -258,6 +283,8 @@
             border: 1px solid #d6c9c0;
             font-family: inherit;
             font-size: 1rem;
+            background: inherit;
+            color: inherit;
         }
         .form-group textarea {
             min-height: 100px;
@@ -276,113 +303,16 @@
             border-top: 1px solid #e0d6ce;
             padding-top: 20px;
         }
-        /* 深色背景适配 */
-        body.dark-mode {
-            background: #1a1a1a;
-            color: #e0e0e0;
+        @media (max-width: 500px) {
+            header h1 { font-size: 1.6rem; }
+            .forum-nav { flex-direction: column; align-items: stretch; }
+            .btn { width: 100%; text-align: center; }
+            .search-area { flex-direction: column; align-items: stretch; }
+            .color-picker { justify-content: center; }
         }
-        body.dark-mode header {
-            border-bottom-color: #444;
-        }
-        body.dark-mode header h1,
-        body.dark-mode header p {
-            color: #ddd;
-        }
-        body.dark-mode .toolbar {
-            background: rgba(40,40,40,0.8);
-        }
-        body.dark-mode .toolbar-left span {
-            color: #aaa;
-        }
-        body.dark-mode .search-box {
-            background: #2a2a2a;
-            border-color: #555;
-        }
-        body.dark-mode .search-box input {
-            color: #ddd;
-        }
-        body.dark-mode .search-box input::placeholder {
-            color: #777;
-        }
-        body.dark-mode .post-item {
-            background: #2a2a2a;
-            border-left-color: #888;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        body.dark-mode .post-item h3 {
-            color: #eee;
-        }
-        body.dark-mode .post-item h3:hover {
-            color: #b8a69a;
-        }
-        body.dark-mode .post-meta,
-        body.dark-mode .post-excerpt {
-            color: #bbb;
-        }
-        body.dark-mode .modal {
-            background: #2a2a2a;
-            color: #eee;
-        }
-        body.dark-mode .modal-close {
-            color: #aaa;
-        }
-        body.dark-mode .modal .detail-meta {
-            color: #aaa;
-        }
-        body.dark-mode .reply-item {
-            background: #333;
-        }
-        body.dark-mode .reply-item strong {
-            color: #ccc;
-        }
-        body.dark-mode .reply-form textarea {
-            background: #222;
-            border-color: #555;
-            color: #ddd;
-        }
-        body.dark-mode .form-group label {
-            color: #ccc;
-        }
-        body.dark-mode .form-group input,
-        body.dark-mode .form-group textarea {
-            background: #222;
-            border-color: #555;
-            color: #ddd;
-        }
-        body.dark-mode .btn {
-            background: #444;
-            color: #ddd;
-        }
-        body.dark-mode .btn-primary {
-            background: #666;
-            color: #fff;
-        }
-        body.dark-mode .btn-primary:hover {
-            background: #888;
-        }
-        body.dark-mode .footer {
-            border-top-color: #444;
-            color: #777;
-        }
-        body.dark-mode .empty-state {
-            color: #aaa;
-        }
-        /* 白色背景额外适配（让卡片有点阴影） */
-        body.white-mode .post-item {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        @media (max-width: 600px) {
-            .toolbar {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 8px;
-            }
-            .search-box input {
-                width: 100%;
-            }
-            .color-picker {
-                justify-content: center;
-            }
+        /* 隐藏不匹配的帖子 */
+        .post-item.hidden {
+            display: none;
         }
     </style>
 </head>
@@ -392,21 +322,19 @@
     <p>聊聊那些我們讀過的故事</p>
 </header>
 
-<div class="toolbar">
-    <div class="toolbar-left">
-        <span>📚 全部帖子 · 最新</span>
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="搜尋標題或內容...">
-        </div>
+<div class="forum-nav">
+    <div class="search-area">
+        <input type="text" id="searchInput" placeholder="🔍 搜尋標題或內容…" style="min-width:180px;">
+        <span class="color-picker">
+            <span style="font-size:0.9rem; margin-right:4px;">背景：</span>
+            <span class="color-btn" style="background:#d4edda;" data-color="green" title="綠色"></span>
+            <span class="color-btn" style="background:#d7ccc8;" data-color="brown" title="棕色"></span>
+            <span class="color-btn" style="background:#1e1e1e;" data-color="black" title="黑色"></span>
+            <span class="color-btn" style="background:#ffffff; border-color:#ccc;" data-color="white" title="白色"></span>
+            <span class="color-btn" style="background:#d6eaf8;" data-color="blue" title="藍色"></span>
+        </span>
     </div>
-    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-        <div class="color-picker" id="colorPicker">
-            <button class="color-btn" style="background:#e8f5e9;" data-color="green" title="綠"></button>
-            <button class="color-btn" style="background:#efebe9;" data-color="brown" title="棕"></button>
-            <button class="color-btn" style="background:#1a1a1a;" data-color="black" title="黑"></button>
-            <button class="color-btn" style="background:#ffffff; border-color:#ccc;" data-color="white" title="白"></button>
-            <button class="color-btn" style="background:#e3f2fd;" data-color="blue" title="藍"></button>
-        </div>
+    <div>
         <button class="btn btn-primary" id="newPostBtn">＋ 發新帖</button>
     </div>
 </div>
@@ -426,4 +354,246 @@
         </div>
         <div class="form-group">
             <label>內容</label>
-            <textarea id="postContent" placeholder="分享你的閱讀心得或疑問
+            <textarea id="postContent" placeholder="分享你的閱讀心得或疑問……"></textarea>
+        </div>
+        <button class="btn btn-primary" id="submitPost">發佈</button>
+    </div>
+</div>
+
+<!-- 帖子详情弹窗 -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal">
+        <button class="modal-close" id="closeDetail">×</button>
+        <h2 id="detailTitle"></h2>
+        <div class="detail-meta" id="detailMeta"></div>
+        <div class="content" id="detailContent"></div>
+        <div class="reply-section">
+            <div id="replyList"></div>
+            <div class="reply-form">
+                <textarea id="replyInput" placeholder="寫下你的回覆……"></textarea>
+                <button class="btn btn-primary" id="submitReply">回覆</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">數據保存在本地瀏覽器 · 關閉頁面不會丟失</div>
+
+<script>
+    // ---------- 數據管理 ----------
+    function getPosts() {
+        try {
+            return JSON.parse(localStorage.getItem('forumPosts')) || [];
+        } catch { return []; }
+    }
+    function savePosts(posts) {
+        localStorage.setItem('forumPosts', JSON.stringify(posts));
+    }
+
+    // 初始化示例数据（如果为空）
+    function initSampleData() {
+        let posts = getPosts();
+        if (posts.length === 0) {
+            posts = [
+                {
+                    id: 1,
+                    title: '《全知讀者視角》外傳《尋寶》讀後感',
+                    content: '剛讀完劉尚雅視角的這篇外傳，覺得作者真的很會寫「普通人在日常中發現冒險」的氛圍。那個戴太陽眼鏡的作家女孩和小男孩都很有記憶點。大家覺得這個外傳補全了尚雅的哪些背景？',
+                    author: '迷途讀者',
+                    time: '2026-08-10 14:30',
+                    replies: [
+                        { author: '金獨子鐵粉', content: '我覺得尚雅的家庭壓力和她對「逃跑」的渴望是整篇的核心，最後她沒回去野餐那個細節非常動人。' },
+                        { author: '書蟲阿晴', content: '那台復古電腦上跑的遊戲畫面是不是在暗示《滅亡後的世界》？我當時看到就很激動。' }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: '求推薦類似ORV的韓國網文',
+                    content: '看完ORV之後書荒了很久，有沒有類似風格的作品推薦？就是那種「讀者/觀測者與故事本身產生交互」的設定。不一定要戰鬥類，能燒腦的也行。',
+                    author: '小說獵人',
+                    time: '2026-08-09 21:10',
+                    replies: [
+                        { author: '路人甲', content: '試試《SSSSS級無限輪迴者》，同一個作者，設定也很特別。' },
+                        { author: 'NA', content: '《滅亡後的世界》也不錯，但更偏哲學一點。' }
+                    ]
+                }
+            ];
+            savePosts(posts);
+        }
+    }
+    initSampleData();
+
+    // ---------- 渲染与搜索 ----------
+    function renderPosts(filter = '') {
+        const posts = getPosts();
+        const container = document.getElementById('postList');
+        const keyword = filter.trim().toLowerCase();
+
+        let filteredPosts = posts;
+        if (keyword) {
+            filteredPosts = posts.filter(p => 
+                p.title.toLowerCase().includes(keyword) ||
+                p.content.toLowerCase().includes(keyword)
+            );
+        }
+
+        if (filteredPosts.length === 0) {
+            container.innerHTML = `<div class="empty-state">📭 沒有符合的帖子，試試其他關鍵詞吧</div>`;
+            return;
+        }
+
+        container.innerHTML = filteredPosts.map(p => `
+            <div class="post-item" data-id="${p.id}">
+                <h3 class="post-title">${escapeHtml(p.title)}</h3>
+                <div class="post-meta">
+                    <span>✍️ ${escapeHtml(p.author)}</span>
+                    <span>🕒 ${escapeHtml(p.time)}</span>
+                    <span>💬 ${p.replies ? p.replies.length : 0} 則回覆</span>
+                </div>
+                <div class="post-excerpt">${escapeHtml(p.content)}</div>
+            </div>
+        `).join('');
+
+        // 点击帖子标题进入详情
+        document.querySelectorAll('.post-title').forEach(el => {
+            el.addEventListener('click', function() {
+                const id = parseInt(this.closest('.post-item').dataset.id);
+                openDetail(id);
+            });
+        });
+    }
+
+    // 搜索输入实时过滤
+    document.getElementById('searchInput').addEventListener('input', function() {
+        renderPosts(this.value);
+    });
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ---------- 详情弹窗 ----------
+    let currentDetailId = null;
+
+    function openDetail(id) {
+        const posts = getPosts();
+        const post = posts.find(p => p.id === id);
+        if (!post) return;
+        currentDetailId = id;
+        document.getElementById('detailTitle').textContent = post.title;
+        document.getElementById('detailMeta').textContent = `✍️ ${post.author}  ·  🕒 ${post.time}  ·  💬 ${post.replies ? post.replies.length : 0} 則回覆`;
+        document.getElementById('detailContent').textContent = post.content;
+
+        const replyList = document.getElementById('replyList');
+        if (post.replies && post.replies.length > 0) {
+            replyList.innerHTML = post.replies.map(r => `
+                <div class="reply-item"><strong>${escapeHtml(r.author)}</strong>：${escapeHtml(r.content)}</div>
+            `).join('');
+        } else {
+            replyList.innerHTML = '<div style="color:#9a8e86; padding:8px 0;">還沒有回覆，來搶個沙發吧 🛋️</div>';
+        }
+
+        document.getElementById('detailModal').classList.add('active');
+    }
+
+    // 提交回覆
+    document.getElementById('submitReply').addEventListener('click', function() {
+        const input = document.getElementById('replyInput');
+        const text = input.value.trim();
+        if (!text) return alert('請寫點內容吧');
+        const posts = getPosts();
+        const post = posts.find(p => p.id === currentDetailId);
+        if (!post) return;
+        if (!post.replies) post.replies = [];
+        post.replies.push({
+            author: '匿名讀者',
+            content: text
+        });
+        post.time = new Date().toLocaleString('zh-HK', { hour12: false });
+        savePosts(posts);
+        input.value = '';
+        openDetail(currentDetailId);
+        const searchVal = document.getElementById('searchInput').value;
+        renderPosts(searchVal);
+    });
+
+    // 关闭详情
+    document.getElementById('closeDetail').addEventListener('click', function() {
+        document.getElementById('detailModal').classList.remove('active');
+    });
+    document.getElementById('detailModal').addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('active');
+    });
+
+    // ---------- 新帖弹窗 ----------
+    document.getElementById('newPostBtn').addEventListener('click', function() {
+        document.getElementById('newPostModal').classList.add('active');
+        document.getElementById('postTitle').value = '';
+        document.getElementById('postContent').value = '';
+    });
+
+    document.getElementById('closeNewPost').addEventListener('click', function() {
+        document.getElementById('newPostModal').classList.remove('active');
+    });
+    document.getElementById('newPostModal').addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('active');
+    });
+
+    document.getElementById('submitPost').addEventListener('click', function() {
+        const title = document.getElementById('postTitle').value.trim();
+        const content = document.getElementById('postContent').value.trim();
+        if (!title || !content) return alert('標題和內容都不能空喔');
+        const posts = getPosts();
+        const newId = posts.length ? Math.max(...posts.map(p => p.id)) + 1 : 1;
+        posts.unshift({
+            id: newId,
+            title: title,
+            content: content,
+            author: '匿名書友',
+            time: new Date().toLocaleString('zh-HK', { hour12: false }),
+            replies: []
+        });
+        savePosts(posts);
+        document.getElementById('newPostModal').classList.remove('active');
+        const searchVal = document.getElementById('searchInput').value;
+        renderPosts(searchVal);
+    });
+
+    // ---------- 背景色切换 ----------
+    const colorBtns = document.querySelectorAll('.color-btn');
+    colorBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const color = this.dataset.color;
+            // 移除所有背景类
+            document.body.className = document.body.className
+                .split(' ')
+                .filter(cls => !cls.startsWith('bg-'))
+                .join(' ');
+            if (color !== 'white') { // white是默认背景，不需要加类
+                document.body.classList.add('bg-' + color);
+            }
+            // 激活样式
+            colorBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            // 保存偏好
+            localStorage.setItem('forumBgColor', color);
+        });
+    });
+
+    // 恢复上次选择的背景色
+    const savedBg = localStorage.getItem('forumBgColor');
+    if (savedBg && savedBg !== 'white') {
+        document.body.classList.add('bg-' + savedBg);
+        document.querySelector(`.color-btn[data-color="${savedBg}"]`)?.classList.add('active');
+    } else {
+        // 默认白色高亮
+        document.querySelector('.color-btn[data-color="white"]')?.classList.add('active');
+    }
+
+    // ---------- 启动 ----------
+    renderPosts();
+</script>
+</body>
+</html>
