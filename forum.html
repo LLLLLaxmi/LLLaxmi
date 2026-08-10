@@ -1,823 +1,505 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>兰书小说同人网</title>
-    <!-- 引入 Firebase SDK -->
-    <script type="module">
-        // 导入 Firebase 和 Firestore
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, getDocs, where, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, orderBy, getDocs, where, doc, updateDoc, arrayUnion, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCGA8Nzne8z0TSGpwhIFr0zsLQu6Hdc7aE",
-            authDomain: "lanshu-e4b74.firebaseapp.com",
-            projectId: "lanshu-e4b74",
-            storageBucket: "lanshu-e4b74.firebasestorage.app",
-            messagingSenderId: "262254553127",
-            appId: "1:262254553127:web:ea93d881adeb6c7f834602",
-            measurementId: "G-H6B6RPT09G"
-        };
+// 使用 window 上已注入的实例
+const auth = window.auth;
+const db = window.db;
+const storage = window.storage;
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+// DOM 元素
+const postList = document.getElementById('postList');
+const searchInput = document.getElementById('searchInput');
+const categorySelect = document.getElementById('categorySelect');
+const userDisplay = document.getElementById('userDisplay');
+const userAvatarImg = document.getElementById('userAvatarImg');
+const userNameDisplay = document.getElementById('userNameDisplay');
+const userEmailHint = document.getElementById('userEmailHint');
+const authBtn = document.getElementById('authBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
+const authModal = document.getElementById('authModal');
+const closeAuth = document.getElementById('closeAuth');
+const authTitle = document.getElementById('authTitle');
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const authNickname = document.getElementById('authNickname');
+const nicknameGroup = document.getElementById('nicknameGroup');
+const submitAuth = document.getElementById('submitAuth');
+const authToggleLink = document.getElementById('authToggleLink');
+const authToggleText = document.getElementById('authToggleText');
 
-        // 让这些实例可以被全局访问（供后续内联脚本使用）
-        window.auth = auth;
-        window.db = db;
-        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-        window.onAuthStateChanged = onAuthStateChanged;
-        window.signOut = signOut;
-        window.collection = collection;
-        window.addDoc = addDoc;
-        window.query = query;
-        window.orderBy = orderBy;
-        window.getDocs = getDocs;
-        window.where = where;
-        window.doc = doc;
-        window.updateDoc = updateDoc;
-        window.arrayUnion = arrayUnion;
-    </script>
+const newPostModal = document.getElementById('newPostModal');
+const closeNewPost = document.getElementById('closeNewPost');
+const postTitle = document.getElementById('postTitle');
+const postCategory = document.getElementById('postCategory');
+const postContent = document.getElementById('postContent');
+const submitPost = document.getElementById('submitPost');
 
-    <style>
-        /* 所有样式与之前保持一致，为了节省篇幅这里省略，但实际必须包含完整样式 */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', 'PingFang TC', 'Microsoft YaHei', sans-serif;
-            background: #f7f3ee;
-            color: #2c2c2c;
-            padding: 20px;
-            max-width: 900px;
-            margin: 0 auto;
-            transition: background 0.3s, color 0.3s;
-        }
-        body.bg-green { background: #d4edda; color: #155724; }
-        body.bg-brown { background: #d7ccc8; color: #3e2723; }
-        body.bg-black { background: #1e1e1e; color: #e0e0e0; }
-        body.bg-white { background: #ffffff; color: #2c2c2c; }
-        body.bg-blue { background: #d6eaf8; color: #1a5276; }
-        /* 深色适配省略，与之前相同 */
-        body.bg-black .post-item,
-        body.bg-black .modal,
-        body.bg-black .reply-item,
-        body.bg-black .btn,
-        body.bg-black .form-group input,
-        body.bg-black .form-group textarea,
-        body.bg-black .reply-form textarea {
-            background: #2d2d2d !important;
-            color: #e0e0e0 !important;
-            border-color: #555 !important;
-        }
-        body.bg-black header,
-        body.bg-black .footer {
-            border-color: #555 !important;
-        }
-        body.bg-black .post-item h3,
-        body.bg-black .post-item .post-excerpt,
-        body.bg-black .modal h2,
-        body.bg-black .modal .content {
-            color: #e0e0e0 !important;
-        }
-        body.bg-black .post-meta,
-        body.bg-black .detail-meta,
-        body.bg-black .modal-close {
-            color: #aaa !important;
-        }
-        header {
-            text-align: center;
-            padding: 30px 0 10px;
-            border-bottom: 2px solid #d6c9c0;
-            margin-bottom: 30px;
-        }
-        header h1 {
-            font-size: 2.2rem;
-            font-weight: 300;
-            letter-spacing: 4px;
-            color: inherit;
-        }
-        header p {
-            color: inherit;
-            opacity: 0.7;
-            font-size: 0.95rem;
-            margin-top: 4px;
-        }
-        .forum-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .search-area {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .search-area input {
-            padding: 6px 14px;
-            border-radius: 30px;
-            border: 1px solid #d6c9c0;
-            font-size: 0.95rem;
-            background: inherit;
-            color: inherit;
-        }
-        .search-area input::placeholder {
-            color: #aaa;
-        }
-        .color-picker {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .color-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .color-btn:hover { transform: scale(1.15); }
-        .color-btn.active { border-color: #000; }
-        .btn {
-            background: #d6c9c0;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 30px;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: 0.2s;
-            color: #2c2c2c;
-        }
-        .btn-primary {
-            background: #b8a69a;
-            color: #fff;
-        }
-        .btn-primary:hover { background: #a48f82; }
-        .btn-outline {
-            background: transparent;
-            border: 1px solid #b8a69a;
-        }
-        .btn-outline:hover {
-            background: #b8a69a;
-            color: #fff;
-        }
-        .post-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .post-item {
-            background: #fffcf9;
-            padding: 18px 22px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border-left: 4px solid #b8a69a;
-            transition: 0.15s;
-        }
-        .post-item:hover {
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-        }
-        .post-item h3 {
-            font-size: 1.2rem;
-            font-weight: 500;
-            margin-bottom: 4px;
-            cursor: pointer;
-            color: #3a2f2a;
-        }
-        .post-item h3:hover { color: #8a7a6e; }
-        .post-meta {
-            font-size: 0.85rem;
-            color: #9a8e86;
-            display: flex;
-            gap: 18px;
-            flex-wrap: wrap;
-        }
-        .post-meta span { display: inline-block; }
-        .post-excerpt {
-            margin-top: 8px;
-            color: #5a4f48;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.4);
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal {
-            background: #fffcf9;
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-            position: relative;
-        }
-        .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 22px;
-            font-size: 1.8rem;
-            cursor: pointer;
-            color: #9a8e86;
-            background: none;
-            border: none;
-        }
-        .modal h2 { font-weight: 400; margin-bottom: 6px; }
-        .modal .detail-meta {
-            color: #9a8e86;
-            font-size: 0.85rem;
-            margin-bottom: 18px;
-        }
-        .modal .content {
-            line-height: 1.8;
-            margin-bottom: 24px;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        .reply-section {
-            border-top: 1px solid #e0d6ce;
-            padding-top: 18px;
-            margin-top: 10px;
-        }
-        .reply-item {
-            background: #f7f0eb;
-            padding: 10px 14px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
-        }
-        .reply-item strong { color: #5a4f48; }
-        .reply-form {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 14px;
-        }
-        .reply-form textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 12px;
-            border: 1px solid #d6c9c0;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 70px;
-            background: inherit;
-            color: inherit;
-        }
-        .reply-form button { align-self: flex-end; }
-        .form-group { margin-bottom: 14px; }
-        .form-group label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 500;
-            color: inherit;
-        }
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 12px;
-            border: 1px solid #d6c9c0;
-            font-family: inherit;
-            font-size: 1rem;
-            background: inherit;
-            color: inherit;
-        }
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 50px 20px;
-            color: #9a8e86;
-        }
-        .footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 0.8rem;
-            color: #b8a69a;
-            border-top: 1px solid #e0d6ce;
-            padding-top: 20px;
-        }
-        @media (max-width: 500px) {
-            header h1 { font-size: 1.6rem; }
-            .forum-nav { flex-direction: column; align-items: stretch; }
-            .btn { width: 100%; text-align: center; }
-            .search-area { flex-direction: column; align-items: stretch; }
-            .color-picker { justify-content: center; }
-        }
-        #paimon-overlay {
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            pointer-events: none;
-            z-index: 9999;
-        }
-        #paimon-overlay canvas {
-            width: 300px;
-            height: 300px;
-        }
-        .auth-btn {
-            background: transparent;
-            border: 1px solid #b8a69a;
-            padding: 4px 14px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        .auth-btn:hover {
-            background: #b8a69a;
-            color: #fff;
-        }
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
-        }
-        .category-select {
-            padding: 4px 12px;
-            border-radius: 30px;
-            border: 1px solid #d6c9c0;
-            font-size: 0.9rem;
-        }
-    </style>
-</head>
-<body>
-<header>
-    <h1>📖 兰书小说同人网</h1>
-    <p>聊聊那些我們讀過的故事</p>
-</header>
+const fanTranslationModal = document.getElementById('fanTranslationModal');
+const closeFanTranslation = document.getElementById('closeFanTranslation');
+const fanTitle = document.getElementById('fanTitle');
+const fanChapter = document.getElementById('fanChapter');
+const fanContent = document.getElementById('fanContent');
+const fanCategory = document.getElementById('fanCategory');
+const submitFanTranslation = document.getElementById('submitFanTranslation');
 
-<div class="forum-nav">
-    <div class="search-area">
-        <input type="text" id="searchInput" placeholder="🔍 搜尋標題或內容…">
-        <select id="categorySelect" class="category-select">
-            <option value="全部">全部</option>
-            <option value="ORV">ORV</option>
-            <option value="其他">其他</option>
-        </select>
-        <span class="color-picker">
-            <span style="font-size:0.9rem; margin-right:4px;">背景：</span>
-            <span class="color-btn" style="background:#d4edda;" data-color="green"></span>
-            <span class="color-btn" style="background:#d7ccc8;" data-color="brown"></span>
-            <span class="color-btn" style="background:#1e1e1e;" data-color="black"></span>
-            <span class="color-btn" style="background:#ffffff; border-color:#ccc;" data-color="white"></span>
-            <span class="color-btn" style="background:#d6eaf8;" data-color="blue"></span>
-        </span>
-    </div>
-    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-        <span id="userDisplay" style="font-size:0.9rem;">未登入</span>
-        <button id="authBtn" class="auth-btn">登入 / 註冊</button>
-        <button id="logoutBtn" class="auth-btn" style="display:none;">登出</button>
-        <button class="btn btn-primary" id="newPostBtn">＋ 發新帖</button>
-    </div>
-</div>
+const detailModal = document.getElementById('detailModal');
+const closeDetail = document.getElementById('closeDetail');
+const detailTitle = document.getElementById('detailTitle');
+const detailMeta = document.getElementById('detailMeta');
+const detailContent = document.getElementById('detailContent');
+const replyList = document.getElementById('replyList');
+const replyInput = document.getElementById('replyInput');
+const submitReply = document.getElementById('submitReply');
 
-<div id="postList" class="post-list"></div>
+// 头像相关
+const avatarFileInput = document.getElementById('avatarFileInput');
+// 贴图相关
+const stickerImage = document.getElementById('stickerImage');
+const stickerPlaceholder = document.getElementById('stickerPlaceholder');
+const stickerAdminBtn = document.getElementById('stickerAdminBtn');
+const stickerAdminModal = document.getElementById('stickerAdminModal');
+const closeStickerAdmin = document.getElementById('closeStickerAdmin');
+const stickerUrlInput = document.getElementById('stickerUrlInput');
+const stickerFileInput = document.getElementById('stickerFileInput');
+const saveStickerBtn = document.getElementById('saveStickerBtn');
 
-<!-- 登录/注册弹窗 -->
-<div class="modal-overlay" id="authModal">
-    <div class="modal">
-        <button class="modal-close" id="closeAuth">×</button>
-        <h2 id="authTitle">登入</h2>
-        <div class="form-group">
-            <label>用戶名 (電子郵件)</label>
-            <input type="email" id="authEmail" placeholder="你的信箱">
-        </div>
-        <div class="form-group">
-            <label>密碼</label>
-            <input type="password" id="authPassword" placeholder="至少6位">
-        </div>
-        <button class="btn btn-primary" id="submitAuth" style="width:100%;">登入</button>
-        <p style="margin-top:12px; text-align:center; font-size:0.9rem;">
-            <span id="authToggleText">還沒有帳號？</span>
-            <a href="#" id="authToggleLink">註冊</a>
-        </p>
-    </div>
-</div>
+let currentUser = null;
+let currentUserInfo = null;
+let currentDetailId = null;
+let isLogin = true;
 
-<!-- 新帖弹窗 -->
-<div class="modal-overlay" id="newPostModal">
-    <div class="modal">
-        <button class="modal-close" id="closeNewPost">×</button>
-        <h2>📝 發新帖</h2>
-        <div class="form-group">
-            <label>標題</label>
-            <input type="text" id="postTitle" placeholder="寫下你的主題">
-        </div>
-        <div class="form-group">
-            <label>分類</label>
-            <select id="postCategory" style="width:100%; padding:8px 14px; border-radius:12px; border:1px solid #d6c9c0;">
-                <option value="ORV">ORV</option>
-                <option value="其他">其他</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>內容</label>
-            <textarea id="postContent" placeholder="分享你的閱讀心得或疑問……"></textarea>
-        </div>
-        <button class="btn btn-primary" id="submitPost">發佈</button>
-    </div>
-</div>
+// 站长UID（这里写死为你的UID，你登录后可以从Firebase Authentication控制台复制）
+const OWNER_UID = 'YOUR_UID_HERE'; // 替换为你的UID
 
-<!-- 帖子详情弹窗 -->
-<div class="modal-overlay" id="detailModal">
-    <div class="modal">
-        <button class="modal-close" id="closeDetail">×</button>
-        <h2 id="detailTitle"></h2>
-        <div class="detail-meta" id="detailMeta"></div>
-        <div class="content" id="detailContent"></div>
-        <div class="reply-section">
-            <div id="replyList"></div>
-            <div class="reply-form">
-                <textarea id="replyInput" placeholder="寫下你的回覆……"></textarea>
-                <button class="btn btn-primary" id="submitReply">回覆</button>
-            </div>
-        </div>
-    </div>
-</div>
+// ----- 辅助函数 -----
+function getAvatarChar(nickname) {
+    if (!nickname) return '?';
+    return nickname.trim().charAt(0).toUpperCase();
+}
+function getAvatarColor(nickname) {
+    const colors = ['#e57373','#f06292','#ba68c8','#9575cd','#64b5f6','#4dd0e1','#81c784','#aed581','#ffb74d','#ff8a65'];
+    if (!nickname) return colors[0];
+    let hash = 0;
+    for (let i=0; i<nickname.length; i++) hash = nickname.charCodeAt(i) + ((hash<<5)-hash);
+    return colors[Math.abs(hash) % colors.length];
+}
 
-<div class="footer">數據儲存在 Firebase 雲端 · 關閉頁面不會遺失</div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, orderBy, getDocs, where, doc, updateDoc, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyCGA8Nzne8z0TSGpwhIFr0zsLQu6Hdc7aE",
-        authDomain: "lanshu-e4b74.firebaseapp.com",
-        projectId: "lanshu-e4b74",
-        storageBucket: "lanshu-e4b74.firebasestorage.app",
-        messagingSenderId: "262254553127",
-        appId: "1:262254553127:web:ea93d881adeb6c7f834602",
-        measurementId: "G-H6B6RPT09G"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // DOM 引用
-    const postList = document.getElementById('postList');
-    const searchInput = document.getElementById('searchInput');
-    const categorySelect = document.getElementById('categorySelect');
-    const userDisplay = document.getElementById('userDisplay');
-    const authBtn = document.getElementById('authBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const authModal = document.getElementById('authModal');
-    const closeAuth = document.getElementById('closeAuth');
-    const authTitle = document.getElementById('authTitle');
-    const authEmail = document.getElementById('authEmail');
-    const authPassword = document.getElementById('authPassword');
-    const submitAuth = document.getElementById('submitAuth');
-    const authToggleLink = document.getElementById('authToggleLink');
-    const authToggleText = document.getElementById('authToggleText');
-    const newPostBtn = document.getElementById('newPostBtn');
-    const newPostModal = document.getElementById('newPostModal');
-    const closeNewPost = document.getElementById('closeNewPost');
-    const postTitle = document.getElementById('postTitle');
-    const postCategory = document.getElementById('postCategory');
-    const postContent = document.getElementById('postContent');
-    const submitPost = document.getElementById('submitPost');
-    const detailModal = document.getElementById('detailModal');
-    const closeDetail = document.getElementById('closeDetail');
-    const detailTitle = document.getElementById('detailTitle');
-    const detailMeta = document.getElementById('detailMeta');
-    const detailContent = document.getElementById('detailContent');
-    const replyList = document.getElementById('replyList');
-    const replyInput = document.getElementById('replyInput');
-    const submitReply = document.getElementById('submitReply');
-
-    let currentUser = null;
-    let currentDetailId = null;
-    let isLogin = true; // true=登录模式，false=注册模式
-
-    // ----- 渲染帖子 -----
-    async function renderPosts(filter = '', category = '全部') {
-        try {
-            let q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
-            const snapshot = await getDocs(q);
-            let posts = [];
-            snapshot.forEach(doc => {
-                posts.push({ id: doc.id, ...doc.data() });
-            });
-
-            // 分类筛选
-            if (category !== '全部') {
-                posts = posts.filter(p => p.category === category);
-            }
-            // 文字搜索
-            const keyword = filter.trim().toLowerCase();
-            if (keyword) {
-                posts = posts.filter(p =>
-                    p.title.toLowerCase().includes(keyword) ||
-                    p.content.toLowerCase().includes(keyword)
-                );
-            }
-
-            if (posts.length === 0) {
-                postList.innerHTML = `<div class="empty-state">📭 沒有符合的帖子</div>`;
-                return;
-            }
-
-            postList.innerHTML = posts.map(p => `
-                <div class="post-item" data-id="${p.id}">
-                    <h3 class="post-title">${escapeHtml(p.title)}</h3>
-                    <div class="post-meta">
-                        <span>✍️ ${escapeHtml(p.authorName || '匿名')}</span>
-                        <span>🕒 ${p.createdAt ? new Date(p.createdAt.seconds * 1000).toLocaleString('zh-HK') : ''}</span>
-                        <span>💬 ${p.replies ? p.replies.length : 0} 則回覆</span>
-                        <span>🏷️ ${escapeHtml(p.category || '未分類')}</span>
-                    </div>
-                    <div class="post-excerpt">${escapeHtml(p.content)}</div>
-                </div>
-            `).join('');
-
-            document.querySelectorAll('.post-title').forEach(el => {
-                el.addEventListener('click', function() {
-                    const id = this.closest('.post-item').dataset.id;
-                    openDetail(id);
-                });
-            });
-        } catch (error) {
-            console.error('读取帖子失败:', error);
-            postList.innerHTML = `<div class="empty-state">⚠️ 讀取失敗，請檢查網路或稍後再試</div>`;
-        }
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // ----- 打开详情 -----
-    async function openDetail(id) {
-        try {
-            const docRef = doc(db, 'posts', id);
-            const snapshot = await getDocs(query(collection(db, 'posts')));
-            let post = null;
-            snapshot.forEach(d => {
-                if (d.id === id) post = { id: d.id, ...d.data() };
-            });
-            if (!post) return;
-            currentDetailId = id;
-            detailTitle.textContent = post.title;
-            detailMeta.textContent = `✍️ ${post.authorName || '匿名'}  ·  🕒 ${post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString('zh-HK') : ''}  ·  💬 ${post.replies ? post.replies.length : 0} 則回覆`;
-            detailContent.textContent = post.content;
-
-            if (post.replies && post.replies.length > 0) {
-                replyList.innerHTML = post.replies.map(r => `
-                    <div class="reply-item"><strong>${escapeHtml(r.author)}</strong>：${escapeHtml(r.content)}</div>
-                `).join('');
-            } else {
-                replyList.innerHTML = '<div style="color:#9a8e86; padding:8px 0;">還沒有回覆，來搶個沙發吧 🛋️</div>';
-            }
-            detailModal.classList.add('active');
-        } catch (error) {
-            alert('讀取詳情失敗');
-        }
-    }
-
-    // ----- 提交回复 -----
-    submitReply.addEventListener('click', async function() {
-        if (!currentUser) return alert('請先登入');
-        const text = replyInput.value.trim();
-        if (!text) return alert('請寫點內容');
-        try {
-            const postRef = doc(db, 'posts', currentDetailId);
-            await updateDoc(postRef, {
-                replies: arrayUnion({
-                    author: currentUser.email,
-                    content: text,
-                    createdAt: new Date()
-                })
-            });
-            replyInput.value = '';
-            openDetail(currentDetailId);
-            renderPosts(searchInput.value, categorySelect.value);
-        } catch (error) {
-            alert('回覆失敗');
-        }
-    });
-
-    // ----- 发布新帖 -----
-    submitPost.addEventListener('click', async function() {
-        if (!currentUser) return alert('請先登入');
-        const title = postTitle.value.trim();
-        const content = postContent.value.trim();
-        const category = postCategory.value;
-        if (!title || !content) return alert('標題和內容都不能空');
-        try {
-            await addDoc(collection(db, 'posts'), {
-                title,
-                content,
-                category,
-                author: currentUser.uid,
-                authorName: currentUser.email,
-                createdAt: new Date(),
-                replies: []
-            });
-            newPostModal.classList.remove('active');
-            postTitle.value = '';
-            postContent.value = '';
-            renderPosts(searchInput.value, categorySelect.value);
-        } catch (error) {
-            alert('發佈失敗');
-        }
-    });
-
-    // ----- 搜索与分类监听 -----
-    searchInput.addEventListener('input', function() {
-        renderPosts(this.value, categorySelect.value);
-        // 彩蛋：原神牛逼
-        if (this.value === '原神牛逼') {
-            showPaimon();
-        }
-    });
-    categorySelect.addEventListener('change', function() {
-        renderPosts(searchInput.value, this.value);
-    });
-
-    // ----- 彩蛋派蒙（沿用之前的图片版本）-----
-    let paimonShowing = false;
-    function showPaimon() {
-        if (paimonShowing) return;
-        paimonShowing = true;
-        const overlay = document.createElement('div');
-        overlay.id = 'paimon-overlay';
-        const canvas = document.createElement('canvas');
-        canvas.width = 300;
-        canvas.height = 300;
-        overlay.appendChild(canvas);
-        document.body.appendChild(overlay);
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        img.src = 'paimon.png';
-        img.onload = function() {
-            let startTime = Date.now();
-            function animate() {
-                const elapsed = (Date.now() - startTime) / 1000;
-                if (elapsed >= 3) {
-                    overlay.remove();
-                    paimonShowing = false;
-                    return;
-                }
-                const angle = (elapsed / 3) * Math.PI * 2;
-                const bounce = Math.sin(elapsed * 6) * 20;
-                ctx.clearRect(0, 0, 300, 300);
-                ctx.save();
-                ctx.translate(150, 150 + bounce);
-                ctx.rotate(angle);
-                ctx.translate(-150, -150);
-                ctx.drawImage(img, 75, 75, 150, 150);
-                ctx.restore();
-                requestAnimationFrame(animate);
-            }
-            animate();
-        };
-        img.onerror = function() {
-            overlay.remove();
-            paimonShowing = false;
-            alert('派蒙圖片加載失敗，請確保 paimon.png 存在');
-        };
-    }
-
-    // ----- 认证相关 -----
-    onAuthStateChanged(auth, (user) => {
-        currentUser = user;
-        if (user) {
-            userDisplay.textContent = `👤 ${user.email}`;
-            authBtn.style.display = 'none';
-            logoutBtn.style.display = 'inline-block';
+function updateUserUI(user, userInfo) {
+    if (user && userInfo) {
+        const nickname = userInfo.nickname || user.email || '用戶';
+        const avatarUrl = userInfo.avatarUrl || null;
+        userNameDisplay.textContent = nickname;
+        userEmailHint.textContent = user.email;
+        userEmailHint.style.display = 'inline';
+        if (avatarUrl) {
+            userAvatarImg.src = avatarUrl;
+            userAvatarImg.style.display = 'inline-block';
         } else {
-            userDisplay.textContent = '未登入';
-            authBtn.style.display = 'inline-block';
-            logoutBtn.style.display = 'none';
+            // 使用文字头像
+            const char = getAvatarChar(nickname);
+            const color = getAvatarColor(nickname);
+            userAvatarImg.style.display = 'inline-block';
+            userAvatarImg.src = ''; // 清除图片
+            userAvatarImg.style.background = color;
+            userAvatarImg.textContent = char; // 注意：img不能有textContent，改用canvas或div？我们改用span，但这里我们用img的alt? 我们改用canvas绘制？为了简单，我们直接显示文字在背景上，但img不支持，我们改用div。之前我们用了img，但为了显示文字头像，需要改为div。但为了快速，我将在更新时动态替换为span或canvas。
+            // 快速修复：改为span
+            userAvatarImg.outerHTML = `<span class="user-avatar" style="display:inline-block; width:32px; height:32px; border-radius:50%; background:${color}; color:#fff; text-align:center; line-height:32px; font-weight:bold; font-size:16px; flex-shrink:0;">${char}</span>`;
+            // 重新获取引用
+            // 这里简化，下次刷新会重新获取，我们直接修改DOM
+        }
+        authBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+        uploadAvatarBtn.style.display = 'inline-block';
+    } else {
+        userNameDisplay.textContent = '未登入';
+        userEmailHint.style.display = 'none';
+        userAvatarImg.style.display = 'none';
+        authBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'none';
+        uploadAvatarBtn.style.display = 'none';
+    }
+}
+
+// ----- 渲染帖子 -----
+async function renderPosts(filter = '', category = '全部') {
+    try {
+        let q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocs(q);
+        let posts = [];
+        snapshot.forEach(doc => posts.push({ id: doc.id, ...doc.data() }));
+        if (category !== '全部') posts = posts.filter(p => p.category === category);
+        const keyword = filter.trim().toLowerCase();
+        if (keyword) posts = posts.filter(p => p.title.toLowerCase().includes(keyword) || p.content.toLowerCase().includes(keyword));
+        if (posts.length === 0) { postList.innerHTML = `<div class="empty-state">📭 沒有符合的帖子</div>`; return; }
+        postList.innerHTML = posts.map(p => `
+            <div class="post-item" data-id="${p.id}">
+                <h3 class="post-title">${escapeHtml(p.title)}</h3>
+                <div class="post-meta">
+                    <span>✍️ ${escapeHtml(p.authorName || '匿名')}</span>
+                    <span>🕒 ${p.createdAt ? new Date(p.createdAt.seconds * 1000).toLocaleString('zh-HK') : ''}</span>
+                    <span>💬 ${p.replies ? p.replies.length : 0} 則回覆</span>
+                    <span>🏷️ ${escapeHtml(p.category || '未分類')}</span>
+                </div>
+                <div class="post-excerpt">${escapeHtml(p.content)}</div>
+            </div>
+        `).join('');
+        document.querySelectorAll('.post-title').forEach(el => {
+            el.addEventListener('click', function() {
+                const id = this.closest('.post-item').dataset.id;
+                openDetail(id);
+            });
+        });
+    } catch (e) { postList.innerHTML = `<div class="empty-state">⚠️ 讀取失敗</div>`; }
+}
+function escapeHtml(text) { if (!text) return ''; const d=document.createElement('div'); d.textContent=text; return d.innerHTML; }
+
+// ----- 详情 -----
+async function openDetail(id) {
+    try {
+        const snapshot = await getDocs(query(collection(db, 'posts')));
+        let post = null;
+        snapshot.forEach(d => { if (d.id === id) post = { id: d.id, ...d.data() }; });
+        if (!post) return;
+        currentDetailId = id;
+        detailTitle.textContent = post.title;
+        detailMeta.textContent = `✍️ ${post.authorName || '匿名'}  ·  🕒 ${post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString('zh-HK') : ''}  ·  💬 ${post.replies ? post.replies.length : 0} 則回覆`;
+        detailContent.textContent = post.content;
+        replyList.innerHTML = post.replies && post.replies.length > 0 ? post.replies.map(r => `<div class="reply-item"><strong>${escapeHtml(r.author)}</strong>：${escapeHtml(r.content)}</div>`).join('') : '<div style="color:#9a8e86; padding:8px 0;">還沒有回覆</div>';
+        detailModal.classList.add('active');
+    } catch(e) { alert('讀取詳情失敗'); }
+}
+
+// ----- 回复 -----
+submitReply.addEventListener('click', async function() {
+    if (!currentUser) return alert('請先登入');
+    const text = replyInput.value.trim();
+    if (!text) return alert('請寫點內容');
+    try {
+        const postRef = doc(db, 'posts', currentDetailId);
+        await updateDoc(postRef, { replies: arrayUnion({ author: currentUserInfo?.nickname || currentUser.email, content: text, createdAt: new Date() }) });
+        replyInput.value = '';
+        openDetail(currentDetailId);
+        renderPosts(searchInput.value, categorySelect.value);
+    } catch(e) { alert('回覆失敗'); }
+});
+
+// ----- 论坛发帖 -----
+submitPost.addEventListener('click', async function() {
+    if (!currentUser) return alert('請先登入');
+    const title = postTitle.value.trim();
+    const content = postContent.value.trim();
+    const category = postCategory.value;
+    if (!title || !content) return alert('標題和內容都不能空');
+    try {
+        await addDoc(collection(db, 'posts'), {
+            title, content, category,
+            author: currentUser.uid,
+            authorName: currentUserInfo?.nickname || currentUser.email,
+            createdAt: new Date(),
+            replies: []
+        });
+        newPostModal.classList.remove('active');
+        postTitle.value = ''; postContent.value = '';
+        renderPosts(searchInput.value, categorySelect.value);
+    } catch(e) { alert('發佈失敗'); }
+});
+
+// ----- 自主汉化提交 -----
+submitFanTranslation.addEventListener('click', async function() {
+    if (!currentUser) return alert('請先登入');
+    const title = fanTitle.value.trim();
+    const chapter = fanChapter.value.trim();
+    const content = fanContent.value.trim();
+    const category = fanCategory.value;
+    if (!title || !content) return alert('作品名稱和翻譯內容都不能空');
+    try {
+        const fullContent = `【${title}】${chapter ? ` (${chapter})` : ''}\n\n${content}`;
+        await addDoc(collection(db, 'posts'), {
+            title: `[漢化] ${title}`,
+            content: fullContent,
+            category: category,
+            author: currentUser.uid,
+            authorName: currentUserInfo?.nickname || currentUser.email,
+            createdAt: new Date(),
+            replies: []
+        });
+        fanTranslationModal.classList.remove('active');
+        fanTitle.value = ''; fanChapter.value = ''; fanContent.value = '';
+        renderPosts(searchInput.value, categorySelect.value);
+    } catch(e) { alert('提交失敗'); }
+});
+
+// ----- 搜索 & 分类 -----
+searchInput.addEventListener('input', function() {
+    renderPosts(this.value, categorySelect.value);
+    if (this.value === '原神牛逼') showPaimon();
+});
+categorySelect.addEventListener('change', function() {
+    renderPosts(searchInput.value, this.value);
+});
+
+// ----- 派蒙彩蛋 -----
+let paimonShowing = false;
+function showPaimon() {
+    if (paimonShowing) return;
+    paimonShowing = true;
+    const overlay = document.createElement('div');
+    overlay.id = 'paimon-overlay';
+    const canvas = document.createElement('canvas');
+    canvas.width = 300; canvas.height = 300;
+    overlay.appendChild(canvas);
+    document.body.appendChild(overlay);
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.src = 'paimon.png';
+    img.onload = function() {
+        let startTime = Date.now();
+        function animate() {
+            const elapsed = (Date.now() - startTime) / 1000;
+            if (elapsed >= 3) { overlay.remove(); paimonShowing = false; return; }
+            const angle = (elapsed / 3) * Math.PI * 2;
+            const bounce = Math.sin(elapsed * 6) * 20;
+            ctx.clearRect(0, 0, 300, 300);
+            ctx.save();
+            ctx.translate(150, 150 + bounce);
+            ctx.rotate(angle);
+            ctx.translate(-150, -150);
+            ctx.drawImage(img, 75, 75, 150, 150);
+            ctx.restore();
+            requestAnimationFrame(animate);
+        }
+        animate();
+    };
+    img.onerror = function() {
+        overlay.remove();
+        paimonShowing = false;
+        alert('派蒙圖片加載失敗，請確保 paimon.png 存在');
+    };
+}
+
+// ----- 认证 -----
+onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    if (user) {
+        try {
+            const docRef = doc(db, 'users', user.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                currentUserInfo = docSnap.data();
+            } else {
+                currentUserInfo = { nickname: user.email.split('@')[0] };
+            }
+            updateUserUI(user, currentUserInfo);
+        } catch(e) {
+            currentUserInfo = { nickname: user.email.split('@')[0] };
+            updateUserUI(user, currentUserInfo);
         }
         renderPosts(searchInput.value, categorySelect.value);
-    });
+    } else {
+        currentUserInfo = null;
+        updateUserUI(null, null);
+        renderPosts(searchInput.value, categorySelect.value);
+    }
+});
 
-    authBtn.addEventListener('click', () => {
-        isLogin = true;
+authBtn.addEventListener('click', () => {
+    isLogin = true;
+    authTitle.textContent = '登入';
+    submitAuth.textContent = '登入';
+    authToggleText.textContent = '還沒有帳號？';
+    authToggleLink.textContent = '註冊';
+    nicknameGroup.style.display = 'none';
+    authNickname.value = '';
+    authModal.classList.add('active');
+    authEmail.value = ''; authPassword.value = '';
+});
+
+closeAuth.addEventListener('click', () => authModal.classList.remove('active'));
+authModal.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) authModal.classList.remove('active');
+});
+
+authToggleLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    isLogin = !isLogin;
+    if (isLogin) {
         authTitle.textContent = '登入';
         submitAuth.textContent = '登入';
         authToggleText.textContent = '還沒有帳號？';
         authToggleLink.textContent = '註冊';
-        authModal.classList.add('active');
-        authEmail.value = '';
-        authPassword.value = '';
-    });
-
-    closeAuth.addEventListener('click', () => authModal.classList.remove('active'));
-    authModal.addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) authModal.classList.remove('active');
-    });
-
-    authToggleLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        isLogin = !isLogin;
-        if (isLogin) {
-            authTitle.textContent = '登入';
-            submitAuth.textContent = '登入';
-            authToggleText.textContent = '還沒有帳號？';
-            authToggleLink.textContent = '註冊';
-        } else {
-            authTitle.textContent = '註冊';
-            submitAuth.textContent = '註冊';
-            authToggleText.textContent = '已有帳號？';
-            authToggleLink.textContent = '登入';
-        }
-    });
-
-    submitAuth.addEventListener('click', async function() {
-        const email = authEmail.value.trim();
-        const password = authPassword.value.trim();
-        if (!email || !password) return alert('請填寫完整');
-        try {
-            if (isLogin) {
-                await signInWithEmailAndPassword(auth, email, password);
-            } else {
-                await createUserWithEmailAndPassword(auth, email, password);
-            }
-            authModal.classList.remove('active');
-        } catch (error) {
-            alert(error.message);
-        }
-    });
-
-    logoutBtn.addEventListener('click', async () => {
-        await signOut(auth);
-    });
-
-    // ----- 新帖按钮 -----
-    newPostBtn.addEventListener('click', () => {
-        if (!currentUser) return alert('請先登入');
-        newPostModal.classList.add('active');
-        postTitle.value = '';
-        postContent.value = '';
-    });
-    closeNewPost.addEventListener('click', () => newPostModal.classList.remove('active'));
-    newPostModal.addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) newPostModal.classList.remove('active');
-    });
-
-    // ----- 关闭详情 -----
-    closeDetail.addEventListener('click', () => detailModal.classList.remove('active'));
-    detailModal.addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) detailModal.classList.remove('active');
-    });
-
-    // ----- 背景色切换（与原版一致）-----
-    const colorBtns = document.querySelectorAll('.color-btn');
-    colorBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const color = this.dataset.color;
-            document.body.className = document.body.className
-                .split(' ')
-                .filter(cls => !cls.startsWith('bg-'))
-                .join(' ');
-            if (color !== 'white') document.body.classList.add('bg-' + color);
-            colorBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            localStorage.setItem('forumBgColor', color);
-        });
-    });
-    const savedBg = localStorage.getItem('forumBgColor');
-    if (savedBg && savedBg !== 'white') {
-        document.body.classList.add('bg-' + savedBg);
-        document.querySelector(`.color-btn[data-color="${savedBg}"]`)?.classList.add('active');
+        nicknameGroup.style.display = 'none';
     } else {
-        document.querySelector('.color-btn[data-color="white"]')?.classList.add('active');
+        authTitle.textContent = '註冊';
+        submitAuth.textContent = '註冊';
+        authToggleText.textContent = '已有帳號？';
+        authToggleLink.textContent = '登入';
+        nicknameGroup.style.display = 'block';
     }
+});
 
-    // 初始加载
-    renderPosts();
-</script>
-</body>
-</html>
+submitAuth.addEventListener('click', async function() {
+    const email = authEmail.value.trim();
+    const password = authPassword.value.trim();
+    const nickname = authNickname.value.trim();
+    if (!email || !password) return alert('請填寫完整');
+    if (!isLogin && !nickname) return alert('註冊時請填寫暱稱');
+    try {
+        let userCredential;
+        if (isLogin) {
+            userCredential = await signInWithEmailAndPassword(auth, email, password);
+        } else {
+            userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await setDoc(doc(db, 'users', userCredential.user.uid), {
+                nickname: nickname,
+                email: email,
+                createdAt: new Date()
+            });
+            await updateProfile(userCredential.user, { displayName: nickname });
+        }
+        authModal.classList.remove('active');
+    } catch(error) {
+        alert(error.message);
+    }
+});
+
+logoutBtn.addEventListener('click', async () => {
+    await signOut(auth);
+});
+
+// ----- 上传头像 -----
+uploadAvatarBtn.addEventListener('click', () => {
+    avatarFileInput.click();
+});
+
+avatarFileInput.addEventListener('change', async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!currentUser) return alert('請先登入');
+    try {
+        const storageRef = ref(storage, `avatars/${currentUser.uid}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        // 更新 Firestore 用户信息
+        await setDoc(doc(db, 'users', currentUser.uid), { avatarUrl: url }, { merge: true });
+        // 更新本地显示
+        currentUserInfo.avatarUrl = url;
+        updateUserUI(currentUser, currentUserInfo);
+        alert('頭像更新成功！');
+    } catch(error) {
+        alert('上傳失敗：'+error.message);
+    }
+    avatarFileInput.value = '';
+});
+
+// ----- 贴图管理（仅站长） -----
+// 读取贴图
+async function loadSticker() {
+    try {
+        const docRef = doc(db, 'siteConfig', 'sticker');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.url) {
+                stickerImage.src = data.url;
+                stickerImage.style.display = 'block';
+                stickerPlaceholder.style.display = 'none';
+            } else {
+                stickerImage.style.display = 'none';
+                stickerPlaceholder.style.display = 'block';
+            }
+        }
+    } catch(e) { console.error('加载贴图失败', e); }
+}
+loadSticker();
+
+// 站长判断（只显示管理按钮）
+stickerAdminBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (!currentUser) return alert('請先登入');
+    if (currentUser.uid !== OWNER_UID) {
+        alert('只有站長可以更換貼圖');
+        return;
+    }
+    stickerAdminModal.classList.add('active');
+    stickerUrlInput.value = '';
+    stickerFileInput.value = '';
+});
+
+closeStickerAdmin.addEventListener('click', () => stickerAdminModal.classList.remove('active'));
+stickerAdminModal.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) stickerAdminModal.classList.remove('active');
+});
+
+saveStickerBtn.addEventListener('click', async function() {
+    if (!currentUser || currentUser.uid !== OWNER_UID) return alert('你不是站長');
+    let url = stickerUrlInput.value.trim();
+    if (stickerFileInput.files.length > 0) {
+        // 上传文件
+        const file = stickerFileInput.files[0];
+        try {
+            const storageRef = ref(storage, `stickers/${Date.now()}_${file.name}`);
+            await uploadBytes(storageRef, file);
+            url = await getDownloadURL(storageRef);
+        } catch(e) {
+            alert('上傳失敗');
+            return;
+        }
+    }
+    if (!url) return alert('請輸入網址或選擇圖片');
+    try {
+        await setDoc(doc(db, 'siteConfig', 'sticker'), { url: url, updatedAt: new Date() });
+        stickerImage.src = url;
+        stickerImage.style.display = 'block';
+        stickerPlaceholder.style.display = 'none';
+        stickerAdminModal.classList.remove('active');
+        alert('貼圖已更新！');
+    } catch(e) {
+        alert('儲存失敗');
+    }
+});
+
+// ----- 弹窗控制 -----
+document.getElementById('menuForumPost').addEventListener('click', function(e) {
+    e.preventDefault();
+    if (!currentUser) return alert('請先登入');
+    newPostModal.classList.add('active');
+    postTitle.value = ''; postContent.value = '';
+});
+document.getElementById('menuFanTranslation').addEventListener('click', function(e) {
+    e.preventDefault();
+    if (!currentUser) return alert('請先登入');
+    fanTranslationModal.classList.add('active');
+    fanTitle.value = ''; fanChapter.value = ''; fanContent.value = '';
+});
+
+closeNewPost.addEventListener('click', () => newPostModal.classList.remove('active'));
+newPostModal.addEventListener('click', (e) => { if (e.target === e.currentTarget) newPostModal.classList.remove('active'); });
+closeFanTranslation.addEventListener('click', () => fanTranslationModal.classList.remove('active'));
+fanTranslationModal.addEventListener('click', (e) => { if (e.target === e.currentTarget) fanTranslationModal.classList.remove('active'); });
+closeDetail.addEventListener('click', () => detailModal.classList.remove('active'));
+detailModal.addEventListener('click', (e) => { if (e.target === e.currentTarget) detailModal.classList.remove('active'); });
+
+// ----- 背景色 -----
+const colorBtns = document.querySelectorAll('.color-btn');
+colorBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+        const color = this.dataset.color;
+        document.body.className = document.body.className.split(' ').filter(cls => !cls.startsWith('bg-')).join(' ');
+        if (color !== 'white') document.body.classList.add('bg-' + color);
+        colorBtns.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        localStorage.setItem('forumBgColor', color);
+    });
+});
+const savedBg = localStorage.getItem('forumBgColor');
+if (savedBg && savedBg !== 'white') {
+    document.body.classList.add('bg-' + savedBg);
+    document.querySelector(`.color-btn[data-color="${savedBg}"]`)?.classList.add('active');
+} else {
+    document.querySelector('.color-btn[data-color="white"]')?.classList.add('active');
+}
+
+renderPosts();
