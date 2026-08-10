@@ -138,18 +138,36 @@
         body.bg-black .dropdown-menu a { color:#e0e0e0; }
         body.bg-black .dropdown-menu a:hover { background:#3d3d3d; }
 
-        .user-avatar { display:inline-block; width:32px; height:32px; border-radius:50%; background:#b8a69a; color:#fff; text-align:center; line-height:32px; font-weight:bold; font-size:16px; flex-shrink:0; object-fit:cover; }
+        .user-avatar { display:inline-block; width:32px; height:32px; border-radius:50%; background:#b8a69a; color:#fff; text-align:center; line-height:32px; font-weight:bold; font-size:16px; flex-shrink:0; object-fit:cover; cursor:pointer; }
+        .user-avatar:hover { opacity:0.8; }
         .user-display { display:flex; align-items:center; gap:8px; }
         .user-display .user-name { font-weight:500; }
         .user-email-hint { font-size:0.7rem; color:#aaa; display:none; }
         .user-display:hover .user-email-hint { display:inline; }
 
-        #footerSticker { position:fixed; bottom:20px; right:20px; z-index:999; cursor:pointer; width:80px; height:80px; border-radius:50%; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:flex; align-items:center; justify-content:center; overflow:hidden; border:2px solid #b8a69a; transition:0.2s; }
-        #footerSticker:hover { transform:scale(1.05); }
+        /* 贴图：方形，大一点，双击更换 */
+        #footerSticker {
+            position:fixed;
+            bottom:20px;
+            right:20px;
+            z-index:999;
+            cursor:pointer;
+            width:150px;
+            height:150px;
+            border-radius:8px;
+            background:#fff;
+            box-shadow:0 4px 12px rgba(0,0,0,0.15);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            overflow:hidden;
+            border:2px solid #b8a69a;
+            transition:0.2s;
+        }
+        #footerSticker:hover { transform:scale(1.02); }
         #footerSticker img { width:100%; height:100%; object-fit:cover; }
-        #stickerPlaceholder { font-size:2rem; }
-        .sticker-admin-btn { position:absolute; bottom:0; right:0; background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:50%; width:24px; height:24px; font-size:12px; cursor:pointer; display:none; align-items:center; justify-content:center; }
-        #footerSticker:hover .sticker-admin-btn { display:flex; }
+        #stickerPlaceholder { font-size:3rem; }
+        /* 齿轮按钮已移除 */
     </style>
 </head>
 <body>
@@ -178,13 +196,12 @@
     </div>
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <span id="userDisplay" style="font-size:0.9rem; display:flex; align-items:center; gap:6px; cursor:default;">
-            <img id="userAvatarImg" class="user-avatar" style="display:none; width:32px; height:32px; border-radius:50%; object-fit:cover;" />
+            <img id="userAvatarImg" class="user-avatar" style="display:none; width:32px; height:32px; border-radius:50%; object-fit:cover; cursor:pointer;" title="點擊更換頭像" />
             <span id="userNameDisplay">未登入</span>
             <span class="user-email-hint" id="userEmailHint"></span>
         </span>
         <button id="authBtn" class="auth-btn">登入 / 註冊</button>
         <button id="logoutBtn" class="auth-btn" style="display:none;">登出</button>
-        <button id="uploadAvatarBtn" class="auth-btn" style="display:none;">📷 頭像</button>
 
         <div class="dropdown-wrapper">
             <button class="btn btn-primary" id="newPostBtn">＋ 發新帖</button>
@@ -315,10 +332,10 @@
 
 <div class="footer">
     數據儲存在 Firebase 雲端 · 關閉頁面不會遺失
-    <div id="footerSticker" title="點擊更換貼圖（僅站長）">
+    <!-- 贴图：方形，双击触发更换 -->
+    <div id="footerSticker" title="雙擊更換貼圖（僅站長）">
         <img id="stickerImage" src="" alt="裝飾貼圖" style="width:100%; height:100%; object-fit:cover; display:none;">
-        <span id="stickerPlaceholder" style="font-size:2rem;">✨</span>
-        <button class="sticker-admin-btn" id="stickerAdminBtn">⚙️</button>
+        <span id="stickerPlaceholder" style="font-size:3rem;">✨</span>
     </div>
 </div>
 
@@ -343,7 +360,6 @@
     const userEmailHint = document.getElementById('userEmailHint');
     const authBtn = document.getElementById('authBtn');
     const logoutBtn = document.getElementById('logoutBtn');
-    const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
     const authModal = document.getElementById('authModal');
     const closeAuth = document.getElementById('closeAuth');
     const authTitle = document.getElementById('authTitle');
@@ -382,12 +398,12 @@
     const avatarFileInput = document.getElementById('avatarFileInput');
     const stickerImage = document.getElementById('stickerImage');
     const stickerPlaceholder = document.getElementById('stickerPlaceholder');
-    const stickerAdminBtn = document.getElementById('stickerAdminBtn');
     const stickerAdminModal = document.getElementById('stickerAdminModal');
     const closeStickerAdmin = document.getElementById('closeStickerAdmin');
     const stickerUrlInput = document.getElementById('stickerUrlInput');
     const stickerFileInput = document.getElementById('stickerFileInput');
     const saveStickerBtn = document.getElementById('saveStickerBtn');
+    const footerSticker = document.getElementById('footerSticker');
 
     let currentUser = null;
     let currentUserInfo = null;
@@ -429,14 +445,12 @@
             }
             authBtn.style.display = 'none';
             logoutBtn.style.display = 'inline-block';
-            uploadAvatarBtn.style.display = 'inline-block';
         } else {
             userNameDisplay.textContent = '未登入';
             userEmailHint.style.display = 'none';
             userAvatarImg.style.display = 'none';
             authBtn.style.display = 'inline-block';
             logoutBtn.style.display = 'none';
-            uploadAvatarBtn.style.display = 'none';
         }
     }
 
@@ -678,7 +692,9 @@
         await signOut(auth);
     });
 
-    uploadAvatarBtn.addEventListener('click', () => {
+    // ---- 点击头像上传（替代原“头像”按钮） ----
+    userAvatarImg.addEventListener('click', function() {
+        if (!currentUser) return alert('請先登入');
         avatarFileInput.click();
     });
 
@@ -700,6 +716,7 @@
         avatarFileInput.value = '';
     });
 
+    // ---- 贴图功能：双击更换（站长） ----
     async function loadSticker() {
         try {
             const docRef = doc(db, 'siteConfig', 'sticker');
@@ -719,7 +736,8 @@
     }
     loadSticker();
 
-    stickerAdminBtn.addEventListener('click', function(e) {
+    // 双击贴图触发管理弹窗（仅站长）
+    footerSticker.addEventListener('dblclick', function(e) {
         e.stopPropagation();
         if (!currentUser) return alert('請先登入');
         if (currentUser.uid !== OWNER_UID) {
