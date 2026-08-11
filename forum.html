@@ -55,9 +55,10 @@
             font-family: 'Segoe UI', 'PingFang TC', 'Microsoft YaHei', sans-serif;
             background: #f7f3ee;
             color: #2c2c2c;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
             transition: background 0.3s, color 0.3s;
-            display: flex;
-            min-height: 100vh;
         }
         body.bg-green { background: #d4edda; color: #155724; }
         body.bg-brown { background: #d7ccc8; color: #3e2723; }
@@ -65,110 +66,95 @@
         body.bg-white { background: #ffffff; color: #2c2c2c; }
         body.bg-blue { background: #d6eaf8; color: #1a5276; }
 
-        #leftSidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 140px;
-            height: 100%;
-            background: #f7f3ee;
-            border-right: 2px solid #d6c9c0;
+        /* ---- 顶部栏 ---- */
+        .top-bar {
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: space-between;
-            padding: 20px 0 30px 0;
-            z-index: 100;
-            transition: background 0.3s, border-color 0.3s;
-            overflow-y: auto;
-        }
-        body.bg-black #leftSidebar {
-            background: #1e1e1e;
-            border-color: #555;
-        }
-        .sidebar-top {
-            display: flex;
-            flex-direction: column;
             align-items: center;
-            width: 100%;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 2px solid #d6c9c0;
+            margin-bottom: 20px;
         }
-        .sidebar-bottom {
+        .top-left {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            width: 100%;
-            gap: 8px;
+            gap: 12px;
+            flex-wrap: wrap;
         }
-        #sidebarAvatar {
-            width: 64px;
-            height: 64px;
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             object-fit: cover;
             cursor: pointer;
             border: 2px solid #b8a69a;
-            transition: 0.2s;
             display: none;
         }
-        #sidebarAvatar:hover { opacity: 0.8; transform: scale(1.02); }
-        #sidebarName {
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-top: 6px;
-            text-align: center;
-            word-break: break-all;
-            max-width: 120px;
-            cursor: pointer;
-        }
-        #sidebarName:hover { opacity: 0.7; }
-        #sidebarEmailHint {
-            font-size: 0.6rem;
-            color: #aaa;
-            display: none;
-            text-align: center;
-        }
-        .sidebar-btn {
-            background: transparent;
-            border: 1px solid #b8a69a;
-            padding: 6px 0;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 0.75rem;
-            width: 90px;
-            text-align: center;
-            transition: 0.2s;
-            color: inherit;
-        }
-        .sidebar-btn:hover {
+        .user-avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             background: #b8a69a;
             color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            border: 2px solid #b8a69a;
         }
-        body.bg-black .sidebar-btn { border-color: #888; color: #ddd; }
-        body.bg-black .sidebar-btn:hover { background: #555; color: #fff; }
+        .user-name {
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .user-name:hover { opacity: 0.7; }
+        .user-email-hint {
+            font-size: 0.7rem;
+            color: #aaa;
+            display: none;
+        }
 
-        #mainContent {
-            margin-left: 140px;
-            flex: 1;
-            padding: 20px;
-            max-width: 900px;
-            width: calc(100% - 140px);
-            transition: background 0.3s, color 0.3s;
+        .btn {
+            background: #d6c9c0;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #2c2c2c;
         }
-        header {
-            text-align: center;
-            padding: 20px 0 10px;
-            border-bottom: 2px solid #d6c9c0;
-            margin-bottom: 25px;
+        .btn-primary { background: #b8a69a; color: #fff; }
+        .btn-primary:hover { background: #a48f82; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #b8a69a;
         }
+        .btn-outline:hover { background: #b8a69a; color: #fff; }
+
+        /* ---- 标题 ---- */
+        header { text-align: center; margin-bottom: 20px; }
         header h1 { font-size: 2.2rem; font-weight: 300; letter-spacing: 4px; color: inherit; }
         header p { color: inherit; opacity: 0.7; font-size: 0.95rem; margin-top: 4px; }
 
+        /* ---- 搜索/分类/背景色/发帖 ---- */
         .forum-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
             flex-wrap: wrap;
             gap: 10px;
+            margin-bottom: 25px;
         }
         .search-area {
             display: flex;
@@ -199,18 +185,7 @@
         }
         .color-btn:hover { transform: scale(1.15); }
         .color-btn.active { border-color: #000; }
-        .btn {
-            background: #d6c9c0;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 30px;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: 0.2s;
-            color: #2c2c2c;
-        }
-        .btn-primary { background: #b8a69a; color: #fff; }
-        .btn-primary:hover { background: #a48f82; }
+
         .category-select {
             padding: 4px 12px;
             border-radius: 30px;
@@ -249,6 +224,7 @@
         body.bg-black .dropdown-menu a { color: #e0e0e0; }
         body.bg-black .dropdown-menu a:hover { background: #3d3d3d; }
 
+        /* ---- 帖子列表 ---- */
         .post-list { display: flex; flex-direction: column; gap: 16px; }
         .post-item {
             background: #fffcf9;
@@ -307,6 +283,7 @@
             overflow: hidden;
         }
 
+        /* ---- 弹窗 ---- */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -438,6 +415,7 @@
             position: relative;
         }
 
+        /* ---- 深色主题适配 ---- */
         body.bg-black .post-item,
         body.bg-black .modal,
         body.bg-black .reply-item,
@@ -453,7 +431,8 @@
         body.bg-black header,
         body.bg-black .footer,
         body.bg-black .forum-nav input,
-        body.bg-black .category-select {
+        body.bg-black .category-select,
+        body.bg-black .top-bar {
             border-color: #555 !important;
         }
         body.bg-black .post-item h3,
@@ -473,6 +452,7 @@
             color: #ddd !important;
         }
 
+        /* ---- 派蒙彩蛋 ---- */
         #paimon-overlay {
             position: fixed;
             top:0; left:0; width:100%; height:100%;
@@ -484,100 +464,53 @@
         }
         #paimon-overlay canvas { width:300px; height:300px; }
 
+        /* ---- 固定贴图（右下角，你直接在代码里改 src） ---- */
         #footerSticker {
             position: fixed;
             bottom: 20px;
             right: 20px;
             z-index: 99;
-            cursor: pointer;
             width: 150px;
             height: 150px;
             border-radius: 8px;
             background: #fff;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            overflow: hidden;
+            border: 2px solid #b8a69a;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
-            border: 2px solid #b8a69a;
-            transition: 0.2s;
         }
-        #footerSticker:hover { transform: scale(1.02); }
-        #footerSticker img { width:100%; height:100%; object-fit:cover; }
-        #stickerPlaceholder { font-size:3rem; }
+        #footerSticker img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
+        /* ---- 响应式 ---- */
         @media (max-width: 700px) {
-            #leftSidebar {
-                position: relative;
-                width: 100%;
-                height: auto;
-                flex-direction: row;
-                justify-content: space-around;
-                padding: 10px;
-                border-right: none;
-                border-bottom: 2px solid #d6c9c0;
-            }
-            #mainContent {
-                margin-left: 0;
-                width: 100%;
-                padding: 15px;
-            }
-            .sidebar-top,
-            .sidebar-bottom {
-                flex-direction: row;
-                gap: 10px;
-                width: auto;
-            }
-            #sidebarAvatar { width: 40px; height: 40px; }
-            #sidebarName { font-size: 0.8rem; margin-top: 0; }
-            .sidebar-btn { width: auto; padding: 2px 12px; font-size: 0.7rem; }
+            .top-bar { flex-direction: column; align-items: stretch; }
+            .top-left, .top-right { justify-content: center; }
             .forum-nav { flex-direction: column; align-items: stretch; }
             .search-area { flex-wrap: wrap; justify-content: center; }
+            #footerSticker { width: 100px; height: 100px; }
         }
     </style>
 </head>
 <body>
 
-<!-- 左侧边栏 -->
-<div id="leftSidebar">
-    <div class="sidebar-top">
-        <img id="sidebarAvatar" class="user-avatar" style="display:none; width:64px; height:64px; border-radius:50%; object-fit:cover; cursor:pointer;" title="點擊更換頭像" />
-        <span id="sidebarName">未登入</span>
-        <span id="sidebarEmailHint" style="font-size:0.6rem; color:#aaa; display:none;"></span>
+<!-- 顶部栏 -->
+<div class="top-bar">
+    <div class="top-left">
+        <!-- 头像（点击上传） -->
+        <img id="userAvatar" class="user-avatar" style="display:none;" title="點擊更換頭像" />
+        <span id="userName" class="user-name">未登入</span>
+        <span class="user-email-hint" id="userEmailHint"></span>
+        <button id="editNameBtn" class="btn btn-outline" style="display:none;">✏️</button>
     </div>
-    <div class="sidebar-bottom">
-        <!-- 新增“修改昵称”按钮（登录后显示） -->
-        <button id="sidebarEditNameBtn" class="sidebar-btn" style="display:none;">✏️ 修改暱稱</button>
-        <button id="sidebarAuthBtn" class="sidebar-btn">登入 / 註冊</button>
-        <button id="sidebarLogoutBtn" class="sidebar-btn" style="display:none;">登出</button>
-    </div>
-</div>
-
-<!-- 主内容 -->
-<div id="mainContent">
-    <header>
-        <h1>📖 兰书小说同人网</h1>
-        <p>聊聊那些我們讀過的故事</p>
-    </header>
-
-    <div class="forum-nav">
-        <div class="search-area">
-            <input type="text" id="searchInput" placeholder="🔍 搜尋標題或內容…" />
-            <select id="categorySelect" class="category-select">
-                <option value="全部">全部</option>
-                <option value="ORV">ORV</option>
-                <option value="原创">原创</option>
-                <option value="其他">其他</option>
-            </select>
-            <span class="color-picker">
-                <span style="font-size:0.9rem; margin-right:4px;">背景：</span>
-                <span class="color-btn" style="background:#d4edda;" data-color="green"></span>
-                <span class="color-btn" style="background:#d7ccc8;" data-color="brown"></span>
-                <span class="color-btn" style="background:#1e1e1e;" data-color="black"></span>
-                <span class="color-btn" style="background:#ffffff; border-color:#ccc;" data-color="white"></span>
-                <span class="color-btn" style="background:#d6eaf8;" data-color="blue"></span>
-            </span>
-        </div>
+    <div class="top-right">
+        <button id="authBtn" class="btn btn-outline">登入 / 註冊</button>
+        <button id="logoutBtn" class="btn btn-outline" style="display:none;">登出</button>
         <div class="dropdown-wrapper">
             <button class="btn btn-primary" id="newPostBtn">＋ 發新帖</button>
             <div class="dropdown-menu">
@@ -586,19 +519,50 @@
             </div>
         </div>
     </div>
+</div>
 
-    <div id="postList" class="post-list"></div>
+<!-- 标题 -->
+<header>
+    <h1>📖 兰书小说同人网</h1>
+    <p>聊聊那些我們讀過的故事</p>
+</header>
 
-    <div class="footer">
-        數據儲存在 Firebase 雲端 · 關閉頁面不會遺失
-        <div id="footerSticker" title="雙擊更換貼圖（僅站長）">
-            <img id="stickerImage" src="" alt="裝飾貼圖" style="width:100%; height:100%; object-fit:cover; display:none;">
-            <span id="stickerPlaceholder" style="font-size:3rem;">✨</span>
-        </div>
+<!-- 搜索/分类/背景色 -->
+<div class="forum-nav">
+    <div class="search-area">
+        <input type="text" id="searchInput" placeholder="🔍 搜尋標題或內容…" />
+        <select id="categorySelect" class="category-select">
+            <option value="全部">全部</option>
+            <option value="ORV">ORV</option>
+            <option value="原创">原创</option>
+            <option value="其他">其他</option>
+        </select>
+        <span class="color-picker">
+            <span style="font-size:0.9rem; margin-right:4px;">背景：</span>
+            <span class="color-btn" style="background:#d4edda;" data-color="green"></span>
+            <span class="color-btn" style="background:#d7ccc8;" data-color="brown"></span>
+            <span class="color-btn" style="background:#1e1e1e;" data-color="black"></span>
+            <span class="color-btn" style="background:#ffffff; border-color:#ccc;" data-color="white"></span>
+            <span class="color-btn" style="background:#d6eaf8;" data-color="blue"></span>
+        </span>
+    </div>
+    <!-- 右边留空（之前的发帖按钮已移到顶部） -->
+</div>
+
+<!-- 帖子列表 -->
+<div id="postList" class="post-list"></div>
+
+<div class="footer">
+    數據儲存在 Firebase 雲端 · 關閉頁面不會遺失
+    <!-- 固定贴图（图片地址你直接改 src） -->
+    <div id="footerSticker">
+        <img id="grapefruit.png" src="grapefruit.png" alt="貼圖" />
     </div>
 </div>
 
-<!-- 登录/注册弹窗 -->
+<!-- ========== 弹窗 ========== -->
+
+<!-- 登录/注册 -->
 <div class="modal-overlay" id="authModal">
     <div class="modal">
         <button class="modal-close" id="closeAuth">×</button>
@@ -623,7 +587,7 @@
     </div>
 </div>
 
-<!-- 修改昵称弹窗 -->
+<!-- 修改昵称 -->
 <div class="modal-overlay" id="editNameModal">
     <div class="modal">
         <button class="modal-close" id="closeEditName">×</button>
@@ -636,7 +600,7 @@
     </div>
 </div>
 
-<!-- 论坛发帖弹窗 -->
+<!-- 论坛发帖 -->
 <div class="modal-overlay" id="newPostModal">
     <div class="modal">
         <button class="modal-close" id="closeNewPost">×</button>
@@ -661,7 +625,7 @@
     </div>
 </div>
 
-<!-- 自主汉化弹窗 -->
+<!-- 自主汉化 -->
 <div class="modal-overlay" id="fanTranslationModal">
     <div class="modal">
         <button class="modal-close" id="closeFanTranslation">×</button>
@@ -691,7 +655,7 @@
     </div>
 </div>
 
-<!-- 帖子详情弹窗 -->
+<!-- 帖子详情 -->
 <div class="modal-overlay" id="detailModal">
     <div class="modal">
         <button class="modal-close" id="closeDetail">×</button>
@@ -708,24 +672,7 @@
     </div>
 </div>
 
-<!-- 管理贴图弹窗（仅站长可见） -->
-<div class="modal-overlay" id="stickerAdminModal">
-    <div class="modal">
-        <button class="modal-close" id="closeStickerAdmin">×</button>
-        <h2>🖼️ 更換右下角貼圖</h2>
-        <p style="color:#7a6f68; margin:10px 0;">輸入圖片網址 或 上傳新圖片（僅站長可操作）</p>
-        <div class="form-group">
-            <label>圖片網址</label>
-            <input type="text" id="stickerUrlInput" placeholder="https://example.com/image.png">
-        </div>
-        <div class="form-group">
-            <label>或上傳圖片</label>
-            <input type="file" id="stickerFileInput" accept="image/*">
-        </div>
-        <button class="btn btn-primary" id="saveStickerBtn">儲存貼圖</button>
-    </div>
-</div>
-
+<!-- 隐藏的文件输入（上传头像） -->
 <input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
 
 <script type="module">
@@ -738,24 +685,13 @@
     const db = window.db;
     const storage = window.storage;
 
-    // DOM - 侧边栏
-    const sidebarAvatar = document.getElementById('sidebarAvatar');
-    const sidebarName = document.getElementById('sidebarName');
-    const sidebarEmailHint = document.getElementById('sidebarEmailHint');
-    const sidebarAuthBtn = document.getElementById('sidebarAuthBtn');
-    const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
-    const sidebarEditNameBtn = document.getElementById('sidebarEditNameBtn');
-
-    // DOM - 修改昵称弹窗
-    const editNameModal = document.getElementById('editNameModal');
-    const closeEditName = document.getElementById('closeEditName');
-    const editNameInput = document.getElementById('editNameInput');
-    const saveEditName = document.getElementById('saveEditName');
-
-    // DOM - 其他
-    const postList = document.getElementById('postList');
-    const searchInput = document.getElementById('searchInput');
-    const categorySelect = document.getElementById('categorySelect');
+    // ---- DOM 元素 ----
+    const userAvatar = document.getElementById('userAvatar');
+    const userName = document.getElementById('userName');
+    const userEmailHint = document.getElementById('userEmailHint');
+    const authBtn = document.getElementById('authBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const editNameBtn = document.getElementById('editNameBtn');
     const authModal = document.getElementById('authModal');
     const closeAuth = document.getElementById('closeAuth');
     const authTitle = document.getElementById('authTitle');
@@ -766,6 +702,11 @@
     const submitAuth = document.getElementById('submitAuth');
     const authToggleLink = document.getElementById('authToggleLink');
     const authToggleText = document.getElementById('authToggleText');
+
+    const editNameModal = document.getElementById('editNameModal');
+    const closeEditName = document.getElementById('closeEditName');
+    const editNameInput = document.getElementById('editNameInput');
+    const saveEditName = document.getElementById('saveEditName');
 
     const newPostModal = document.getElementById('newPostModal');
     const closeNewPost = document.getElementById('closeNewPost');
@@ -791,23 +732,19 @@
     const replyInput = document.getElementById('replyInput');
     const submitReply = document.getElementById('submitReply');
 
-    const avatarFileInput = document.getElementById('avatarFileInput');
-    const stickerImage = document.getElementById('stickerImage');
-    const stickerPlaceholder = document.getElementById('stickerPlaceholder');
-    const stickerAdminModal = document.getElementById('stickerAdminModal');
-    const closeStickerAdmin = document.getElementById('closeStickerAdmin');
-    const stickerUrlInput = document.getElementById('stickerUrlInput');
-    const stickerFileInput = document.getElementById('stickerFileInput');
-    const saveStickerBtn = document.getElementById('saveStickerBtn');
-    const footerSticker = document.getElementById('footerSticker');
+    const postList = document.getElementById('postList');
+    const searchInput = document.getElementById('searchInput');
+    const categorySelect = document.getElementById('categorySelect');
 
+    const avatarFileInput = document.getElementById('avatarFileInput');
+
+    // ---- 状态 ----
     let currentUser = null;
     let currentUserInfo = null;
     let currentDetailId = null;
     let isLogin = true;
 
-    const OWNER_UID = 'KLEPde3RozX6k1CDvKsr0ESjjOP2';
-
+    // ---- 工具函数 ----
     function getAvatarChar(nickname) {
         if (!nickname) return '?';
         return nickname.trim().charAt(0).toUpperCase();
@@ -820,38 +757,46 @@
         return colors[Math.abs(hash) % colors.length];
     }
 
+    function escapeHtml(text) {
+        if (!text) return '';
+        const d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
+
+    // ---- 更新用户界面 ----
     function updateUserUI(user, userInfo) {
         if (user && userInfo) {
             const nickname = userInfo.nickname || user.email || '用戶';
             const avatarUrl = userInfo.avatarUrl || null;
-            sidebarName.textContent = nickname;
-            sidebarEmailHint.textContent = user.email;
-            sidebarEmailHint.style.display = 'inline';
+            userName.textContent = nickname;
+            userEmailHint.textContent = user.email;
+            userEmailHint.style.display = 'inline';
             if (avatarUrl) {
-                sidebarAvatar.src = avatarUrl;
-                sidebarAvatar.style.display = 'inline-block';
+                userAvatar.src = avatarUrl;
+                userAvatar.style.display = 'inline-block';
             } else {
                 const char = getAvatarChar(nickname);
                 const color = getAvatarColor(nickname);
-                sidebarAvatar.style.display = 'inline-block';
-                sidebarAvatar.src = '';
-                sidebarAvatar.style.background = color;
-                sidebarAvatar.alt = char;
+                userAvatar.style.display = 'inline-block';
+                userAvatar.src = '';
+                userAvatar.style.background = color;
+                userAvatar.alt = char;
             }
-            sidebarAuthBtn.style.display = 'none';
-            sidebarLogoutBtn.style.display = 'inline-block';
-            sidebarEditNameBtn.style.display = 'inline-block';   // 显示修改昵称按钮
+            authBtn.style.display = 'none';
+            logoutBtn.style.display = 'inline-block';
+            editNameBtn.style.display = 'inline-block';
         } else {
-            sidebarName.textContent = '未登入';
-            sidebarEmailHint.style.display = 'none';
-            sidebarAvatar.style.display = 'none';
-            sidebarAuthBtn.style.display = 'inline-block';
-            sidebarLogoutBtn.style.display = 'none';
-            sidebarEditNameBtn.style.display = 'none';
+            userName.textContent = '未登入';
+            userEmailHint.style.display = 'none';
+            userAvatar.style.display = 'none';
+            authBtn.style.display = 'inline-block';
+            logoutBtn.style.display = 'none';
+            editNameBtn.style.display = 'none';
         }
     }
 
-    // ---------- 渲染帖子 ----------
+    // ---- 渲染帖子 ----
     async function renderPosts(filter = '', category = '全部') {
         try {
             let q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
@@ -861,8 +806,10 @@
             if (category !== '全部') posts = posts.filter(p => p.category === category);
             const keyword = filter.trim().toLowerCase();
             if (keyword) posts = posts.filter(p => p.title.toLowerCase().includes(keyword) || p.content.toLowerCase().includes(keyword));
-            if (posts.length === 0) { postList.innerHTML = `<div class="empty-state">📭 沒有符合的帖子</div>`; return; }
-
+            if (posts.length === 0) {
+                postList.innerHTML = `<div class="empty-state">📭 沒有符合的帖子</div>`;
+                return;
+            }
             postList.innerHTML = posts.map(p => {
                 let avatarHtml = '';
                 if (p.authorAvatar) {
@@ -886,24 +833,18 @@
                     </div>
                 `;
             }).join('');
-
             document.querySelectorAll('.post-title').forEach(el => {
                 el.addEventListener('click', function() {
                     const id = this.closest('.post-item').dataset.id;
                     openDetail(id);
                 });
             });
-        } catch (e) { postList.innerHTML = `<div class="empty-state">⚠️ 讀取失敗</div>`; }
+        } catch (e) {
+            postList.innerHTML = `<div class="empty-state">⚠️ 讀取失敗</div>`;
+        }
     }
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        const d = document.createElement('div');
-        d.textContent = text;
-        return d.innerHTML;
-    }
-
-    // ---------- 详情 ----------
+    // ---- 打开详情 ----
     async function openDetail(id) {
         try {
             const snapshot = await getDocs(query(collection(db, 'posts')));
@@ -912,7 +853,6 @@
             if (!post) return;
             currentDetailId = id;
             detailTitle.textContent = post.title;
-
             let avatarHtml = '';
             if (post.authorAvatar) {
                 avatarHtml = `<img class="author-avatar" src="${escapeHtml(post.authorAvatar)}" alt="" />`;
@@ -922,14 +862,15 @@
                 avatarHtml = `<span class="author-avatar-placeholder" style="background:${color};">${char}</span>`;
             }
             detailMeta.innerHTML = `${avatarHtml} ${escapeHtml(post.authorName || '匿名')}  ·  🕒 ${post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString('zh-HK') : ''}  ·  💬 ${post.replies ? post.replies.length : 0} 則回覆`;
-
             detailContent.textContent = post.content;
-            replyList.innerHTML = post.replies && post.replies.length > 0 ? post.replies.map(r => `<div class="reply-item"><strong>${escapeHtml(r.author)}</strong>：${escapeHtml(r.content)}</div>`).join('') : '<div style="color:#9a8e86; padding:8px 0;">還沒有回覆</div>';
+            replyList.innerHTML = post.replies && post.replies.length > 0 ?
+                post.replies.map(r => `<div class="reply-item"><strong>${escapeHtml(r.author)}</strong>：${escapeHtml(r.content)}</div>`).join('') :
+                '<div style="color:#9a8e86; padding:8px 0;">還沒有回覆</div>';
             detailModal.classList.add('active');
         } catch(e) { alert('讀取詳情失敗'); }
     }
 
-    // ---------- 回复 ----------
+    // ---- 回复 ----
     submitReply.addEventListener('click', async function() {
         if (!currentUser) return alert('請先登入');
         const text = replyInput.value.trim();
@@ -949,7 +890,7 @@
         } catch(e) { alert('回覆失敗'); }
     });
 
-    // ---------- 发帖 ----------
+    // ---- 发帖 ----
     submitPost.addEventListener('click', async function() {
         if (!currentUser) return alert('請先登入');
         const title = postTitle.value.trim();
@@ -971,7 +912,7 @@
         } catch(e) { alert('發佈失敗'); }
     });
 
-    // ---------- 汉化 ----------
+    // ---- 汉化 ----
     submitFanTranslation.addEventListener('click', async function() {
         if (!currentUser) return alert('請先登入');
         const title = fanTitle.value.trim();
@@ -997,7 +938,7 @@
         } catch(e) { alert('提交失敗'); }
     });
 
-    // ---------- 搜索 ----------
+    // ---- 搜索与分类 ----
     searchInput.addEventListener('input', function() {
         renderPosts(this.value, categorySelect.value);
         if (this.value === '原神牛逼') showPaimon();
@@ -1006,7 +947,7 @@
         renderPosts(searchInput.value, this.value);
     });
 
-    // ---------- 派蒙 ----------
+    // ---- 派蒙彩蛋 ----
     let paimonShowing = false;
     function showPaimon() {
         if (paimonShowing) return;
@@ -1045,7 +986,7 @@
         };
     }
 
-    // ---------- 认证 ----------
+    // ---- 认证 ----
     onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         if (user) {
@@ -1070,8 +1011,8 @@
         }
     });
 
-    // ---- 登入/登出 ----
-    sidebarAuthBtn.addEventListener('click', () => {
+    // 登入按钮
+    authBtn.addEventListener('click', () => {
         isLogin = true;
         authTitle.textContent = '登入';
         submitAuth.textContent = '登入';
@@ -1083,7 +1024,7 @@
         authEmail.value = ''; authPassword.value = '';
     });
 
-    sidebarLogoutBtn.addEventListener('click', async () => {
+    logoutBtn.addEventListener('click', async () => {
         await signOut(auth);
     });
 
@@ -1136,7 +1077,7 @@
     });
 
     // ---- 修改昵称 ----
-    sidebarEditNameBtn.addEventListener('click', function() {
+    editNameBtn.addEventListener('click', function() {
         if (!currentUser) return alert('請先登入');
         editNameInput.value = currentUserInfo?.nickname || '';
         editNameModal.classList.add('active');
@@ -1155,10 +1096,8 @@
             await setDoc(doc(db, 'users', currentUser.uid), { nickname: newName }, { merge: true });
             currentUserInfo.nickname = newName;
             updateUserUI(currentUser, currentUserInfo);
-            // 更新当前用户的displayName（可选）
             await updateProfile(auth.currentUser, { displayName: newName });
             editNameModal.classList.remove('active');
-            // 刷新帖子列表以更新作者名（旧帖子作者名不会变，但新发帖会使用新昵称）
             renderPosts(searchInput.value, categorySelect.value);
             alert('暱稱已更新！');
         } catch(e) {
@@ -1167,7 +1106,7 @@
     });
 
     // ---- 头像上传 ----
-    sidebarAvatar.addEventListener('click', function() {
+    userAvatar.addEventListener('click', function() {
         if (!currentUser) return alert('請先登入');
         avatarFileInput.click();
     });
@@ -1190,71 +1129,7 @@
         avatarFileInput.value = '';
     });
 
-    // ---- 贴图 ----
-    async function loadSticker() {
-        try {
-            const docRef = doc(db, 'siteConfig', 'sticker');
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                if (data.url) {
-                    stickerImage.src = data.url;
-                    stickerImage.style.display = 'block';
-                    stickerPlaceholder.style.display = 'none';
-                } else {
-                    stickerImage.style.display = 'none';
-                    stickerPlaceholder.style.display = 'block';
-                }
-            }
-        } catch(e) { console.error('加载贴图失败', e); }
-    }
-    loadSticker();
-
-    footerSticker.addEventListener('dblclick', function(e) {
-        e.stopPropagation();
-        if (!currentUser) return alert('請先登入');
-        if (currentUser.uid !== OWNER_UID) {
-            alert('只有站長可以更換貼圖');
-            return;
-        }
-        stickerAdminModal.classList.add('active');
-        stickerUrlInput.value = '';
-        stickerFileInput.value = '';
-    });
-
-    closeStickerAdmin.addEventListener('click', () => stickerAdminModal.classList.remove('active'));
-    stickerAdminModal.addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) stickerAdminModal.classList.remove('active');
-    });
-
-    saveStickerBtn.addEventListener('click', async function() {
-        if (!currentUser || currentUser.uid !== OWNER_UID) return alert('你不是站長');
-        let url = stickerUrlInput.value.trim();
-        if (stickerFileInput.files.length > 0) {
-            const file = stickerFileInput.files[0];
-            try {
-                const storageRef = ref(storage, `stickers/${Date.now()}_${file.name}`);
-                await uploadBytes(storageRef, file);
-                url = await getDownloadURL(storageRef);
-            } catch(e) {
-                alert('上傳失敗');
-                return;
-            }
-        }
-        if (!url) return alert('請輸入網址或選擇圖片');
-        try {
-            await setDoc(doc(db, 'siteConfig', 'sticker'), { url: url, updatedAt: new Date() });
-            stickerImage.src = url;
-            stickerImage.style.display = 'block';
-            stickerPlaceholder.style.display = 'none';
-            stickerAdminModal.classList.remove('active');
-            alert('貼圖已更新！');
-        } catch(e) {
-            alert('儲存失敗');
-        }
-    });
-
-    // ---- 下拉菜单 ----
+    // ---- 发帖下拉菜单 ----
     document.getElementById('menuForumPost').addEventListener('click', function(e) {
         e.preventDefault();
         if (!currentUser) return alert('請先登入');
